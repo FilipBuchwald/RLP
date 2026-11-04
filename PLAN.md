@@ -155,17 +155,19 @@ Zasada: w danym momencie może być maksymalnie jeden wieczór ze `status = 'liv
 | Metoda | Ścieżka | Opis |
 | --- | --- | --- |
 | GET | `/api/players` | Lista graczy |
-| POST | `/api/players` | Dodaj gracza `{ name, is_guest }`, kolor przydzielany automatycznie |
-| PATCH | `/api/players/:id` | Zmiana imienia, koloru, gość → stały |
-| POST | `/api/sessions` | Nowy wieczór `{ playerIds, target_points, courts, mode, planned_rounds? }` → tworzy i losuje 1. rundę |
+| POST | `/api/players` | Dodaj gracza `{ name, isGuest? }`, kolor przydzielany automatycznie |
+| PATCH | `/api/players/:id` | Zmiana `{ name?, color?, isGuest? }` (np. gość → stały) |
+| POST | `/api/sessions` | Nowy wieczór `{ playerIds, targetPoints, courts, mode, plannedRounds? }` → tworzy i losuje 1. rundę |
 | GET | `/api/sessions/live` | Bieżący wieczór z rundami i meczami (polling) |
-| PUT | `/api/matches/:id` | Zapis wyniku `{ score_a }` → serwer ustawia `score_b = target − score_a` |
+| PUT | `/api/matches/:id` | Zapis wyniku `{ scoreA }` → serwer ustawia `scoreB = target − scoreA` |
 | POST | `/api/sessions/:id/rounds` | Losuj następną rundę; błąd, jeśli bieżąca nie ma kompletu wyników lub plan się skończył |
-| POST | `/api/sessions/:id/finish` | Zakończ `{ cap? }`; zwraca 409 z licznikami meczów, jeśli nierówno i brak `cap` |
+| POST | `/api/sessions/:id/finish` | Zakończ `{ cap? }`; zwraca 409 z licznikami meczów, jeśli nierówno i brak `cap`; 204, gdy nie rozegrano żadnej rundy (wieczór znika) |
 | DELETE | `/api/sessions/:id` | Odrzuć wieczór bez zapisu (tylko `live`) |
-| GET | `/api/ranking?season=2026` | Ranking (stali + osobno goście) |
+| GET | `/api/ranking?season=2026&sort=points\|avg` | Ranking (stali + osobno goście) |
 | GET | `/api/sessions?season=2026` | Historia zakończonych wieczorów |
 | GET | `/api/players/:id/stats?season=2026` | Profil gracza |
+
+JSON w API używa camelCase (kształty: `shared/dto.ts`); w bazie kolumny zostają snake_case.
 
 Bezpieczeństwo: wszystkie zapisy (POST/PUT/PATCH/DELETE) wymagają nagłówka `Cf-Access-Authenticated-User-Email` (ustawia go Cloudflare Access); brak → 401. Lokalnie w dev — zmienna `DEV_USER_EMAIL`.
 

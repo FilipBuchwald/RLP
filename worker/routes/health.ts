@@ -1,4 +1,5 @@
-import type { Handler } from './router'
+import { json } from '../http'
+import type { Handler } from '../router'
 
 // GET /api/health — sprawdza, czy Worker i D1 działają.
 type DbInfo = { now: string; tables: number }
@@ -11,5 +12,5 @@ export const health: Handler = async ({ env, user }) => {
                 AND name <> 'd1_migrations') AS tables`,
   ).first<DbInfo>()
 
-  return Response.json({ ok: true, db, user })
+  return json({ ok: true, db, user })
 }
