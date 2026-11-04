@@ -18,8 +18,10 @@ function VariantCompare({ data }: { data: PlayerStatsDto }) {
     })
     .sort((a, b) => b.avg - a.avg || b.winRate - a.winRate)
   if (!rows.length) return null
-  const fewMatches = rows.some((r) => r.matches < MIN_VARIANT_MATCHES)
-  const best = rows.length > 1 && !fewMatches ? rows[0] : null
+  // Werdykt tylko między nazwanymi wersjami — „bez wersji” jest dla porównania, nie blokuje.
+  const named = rows.filter((r) => r.variantId != null)
+  const fewMatches = named.some((r) => r.matches < MIN_VARIANT_MATCHES)
+  const best = named.length > 1 && !fewMatches ? named[0] : null
 
   return (
     <>

@@ -160,8 +160,8 @@ function VariantsEditor({ p }: { p: PlayerDto }) {
     <>
       <h2>Wersje</h2>
       <div className="muted small" style={{ marginBottom: 8 }}>
-        Np. koszulki „T-Mobile” i „Orange”. Przy turnieju wybierzecie, która wersja dziś gra, a w
-        profilu zobaczycie, która gra lepiej. Ranking się nie zmienia.
+        Przy turnieju wybierzecie, która wersja dziś gra, a w profilu zobaczycie, która gra lepiej.
+        Ranking się nie zmienia.
       </div>
       <div className="card plist">
         {p.variants.map((v) =>

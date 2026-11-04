@@ -55,7 +55,13 @@ sql.push(
   `INSERT INTO player_variants (id, player_id, name, color) VALUES ('demo-v-or', ${q(KUBA)}, 'Orange', '#ff9f5a');`,
 )
 // turniej → wersja Kuby (brak = bez wersji)
-const kubaVariant: Record<number, string> = { 0: 'demo-v-or', 1: 'demo-v-tm', 2: 'demo-v-or' }
+// (T-Mobile w 1 i 4, żeby obie wersje miały min. 5 meczów i było widać 👑)
+const kubaVariant: Record<number, string> = {
+  0: 'demo-v-or',
+  1: 'demo-v-tm',
+  2: 'demo-v-or',
+  4: 'demo-v-tm',
+}
 
 const random = seededRandom(2026)
 const TARGET = 24
