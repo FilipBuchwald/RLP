@@ -38,6 +38,8 @@ export interface SessionDto extends SessionData {
   plannedRounds: number | null
   status: SessionStatus
   createdBy: string | null
+  /** Kiedy poprawiono wyniki po zapisaniu wieczoru (ISO, UTC), null = nigdy. */
+  editedAt: string | null
   rounds: RoundDto[]
 }
 
@@ -89,4 +91,17 @@ export interface ScoreBody {
 }
 export interface FinishBody {
   cap?: number
+}
+/** Poprawki wyników zapisanego wieczoru — wszystkie naraz (atomowo). */
+export interface ScoresBody {
+  scores: { matchId: string; scoreA: number }[]
+}
+
+/** Kopia zapasowa: komplet danych w jednym pliku. */
+export interface ExportDto {
+  app: 'padel-liga'
+  version: 1
+  exportedAt: string
+  players: PlayerDto[]
+  sessions: SessionDto[]
 }

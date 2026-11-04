@@ -3,6 +3,7 @@ import type {
   CreatePlayerBody,
   MeDto,
   CreateSessionBody,
+  ScoresBody,
   PlayerDto,
   PlayerStatsDto,
   RankingDto,
@@ -109,4 +110,13 @@ export const api = {
   finish: (id: string, cap?: number) =>
     request<SessionDto | null>('POST', `/sessions/${id}/finish`, cap === undefined ? {} : { cap }),
   discard: (id: string) => request<null>('DELETE', `/sessions/${id}`),
+  /** Cofa ostatnią rundę wieczoru na żywo; `number` = numer tej rundy (chroni przed podwójnym cofnięciem). */
+  undoRound: (id: string, number: number) =>
+    request<SessionDto>('DELETE', `/sessions/${id}/rounds/${number}`),
+  /** Poprawki wyników w zapisanym wieczorze — wszystkie naraz. */
+  editScores: (id: string, scores: ScoresBody['scores']) =>
+    request<SessionDto>('PUT', `/sessions/${id}/scores`, { scores } satisfies ScoresBody),
 }
+
+/** Kopia zapasowa (JSON) — zwykły link do pobrania. */
+export const EXPORT_URL = '/api/export'

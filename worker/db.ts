@@ -56,6 +56,7 @@ type SessionRow = {
   cap: number | null
   status: SessionStatus
   created_by: string | null
+  edited_at: string | null
 }
 type SessionPlayerRow = { session_id: string; player_id: string }
 type RoundRow = { id: string; session_id: string; number: number; sitting: string }
@@ -147,6 +148,7 @@ export async function loadSessions(
     cap: x.cap,
     status: x.status,
     createdBy: x.created_by,
+    editedAt: x.edited_at ? x.edited_at.replace(' ', 'T') + 'Z' : null,
     players: playersBySession.get(x.id) ?? [],
     rounds: roundsBySession.get(x.id) ?? [],
   }))

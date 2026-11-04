@@ -1,5 +1,6 @@
 import { errorResponse } from './http'
 import { Router } from './router'
+import { exportAll } from './routes/export'
 import { health, me } from './routes/health'
 import * as matches from './routes/matches'
 import * as players from './routes/players'
@@ -18,9 +19,12 @@ const router = new Router()
   .on('POST', '/api/sessions', sessions.create)
   .on('GET', '/api/sessions/live', sessions.live)
   .on('POST', '/api/sessions/:id/rounds', sessions.nextRound)
+  .on('DELETE', '/api/sessions/:id/rounds/:number', sessions.undoRound)
+  .on('PUT', '/api/sessions/:id/scores', sessions.editScores)
   .on('POST', '/api/sessions/:id/finish', sessions.finish)
   .on('DELETE', '/api/sessions/:id', sessions.discard)
   .on('PUT', '/api/matches/:id', matches.setScore)
+  .on('GET', '/api/export', exportAll)
 
 export default {
   async fetch(request, env) {

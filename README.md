@@ -26,6 +26,7 @@ Workera (`worker/index.ts`) i lokalną D1 w prawdziwym runtime Workers.
 | `deploy`                      | build + `wrangler deploy` (ręcznie; normalnie deploy robi push na `main`)         |
 | `seed`                        | czyści **lokalną** bazę i wgrywa dane demo (8 graczy + gość, 5 wieczorów)         |
 | `smoke`                       | rozgrywa całe wieczory przez API na lokalnym `npm run dev` (potem `npm run seed`) |
+| `backup`                      | pełna kopia bazy **produkcyjnej** do `backups/*.sql` (sekcja „Kopia zapasowa”)    |
 | `test` / `test:watch`         | testy Vitest logiki z `shared/`                                                   |
 | `lint`, `format`, `typecheck` | ESLint, Prettier, TypeScript                                                      |
 
@@ -51,7 +52,32 @@ Worker `rlp` w Cloudflare jest podłączony do repo na GitHubie (Workers Builds)
 każdy push na `main` → `npm run build` → `npx wrangler deploy`.
 Nazwa w `wrangler.toml` musi zgadzać się z nazwą Workera w panelu.
 
-Zmiany schematu bazy: dodaj plik w `migrations/` i uruchom `npm run migrate:remote`.
+Zmiany schematu bazy: dodaj plik w `migrations/` i uruchom `npm run migrate:remote`
+**przed** pushem kodu, który z nich korzysta.
+
+## Kopia zapasowa
+
+- **Z aplikacji (każdy):** Historia → „Pobierz kopię danych (JSON)” albo `GET /api/export`.
+  Czytelny komplet: gracze i wszystkie wieczory z wynikami. Dobry do archiwum i Excela.
+- **Pełna kopia SQL:** `npm run backup` → `backups/padel-liga-RRRRMMDD-GGMM.sql`
+  (schemat + dane, folder poza repo). Warto co kilka wieczorów albo przed większą zmianą.
+- **Cofnięcie w czasie (D1 Time Travel):** Cloudflare sam trzyma historię bazy
+  (plan Free: 7 dni, płatny: 30 dni) — bez żadnej konfiguracji:
+
+  ```sh
+  npx wrangler d1 time-travel info padel-liga                       # bieżący punkt
+  npx wrangler d1 time-travel restore padel-liga --timestamp=2026-11-04T18:00:00Z
+  ```
+
+**Przywracanie z pliku SQL** (np. do nowej bazy, gdy coś poszło bardzo źle):
+
+```sh
+npx wrangler d1 create padel-liga-restore
+npx wrangler d1 execute padel-liga-restore --remote --file backups/padel-liga-….sql
+# potem w wrangler.toml: database_name / database_id nowej bazy → push
+```
+
+Plik zawiera `CREATE TABLE`, więc wgrywa się go do **pustej** bazy, nie do istniejącej.
 
 ## Struktura
 

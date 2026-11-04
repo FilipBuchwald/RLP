@@ -163,13 +163,16 @@ Zasada: w danym momencie może być maksymalnie jeden wieczór ze `status = 'liv
 | POST | `/api/sessions/:id/rounds` | Losuj następną rundę; błąd, jeśli bieżąca nie ma kompletu wyników lub plan się skończył |
 | POST | `/api/sessions/:id/finish` | Zakończ `{ cap? }`; zwraca 409 z licznikami meczów, jeśli nierówno i brak `cap`; 204, gdy nie rozegrano żadnej rundy (wieczór znika) |
 | DELETE | `/api/sessions/:id` | Odrzuć wieczór bez zapisu (tylko `live`) |
+| DELETE | `/api/sessions/:id/rounds/:number` | Cofnij ostatnią rundę (tylko `live`, min. 2 rundy; `number` musi być ostatnią) |
+| PUT | `/api/sessions/:id/scores` | Popraw wyniki zapisanego wieczoru `{ scores: [{ matchId, scoreA }] }` — atomowo, ustawia `editedAt` |
+| GET | `/api/export` | Kopia wszystkich danych (gracze + wieczory) jako plik JSON |
 | GET | `/api/ranking?season=2026&sort=points\|avg` | Ranking (stali + osobno goście) |
 | GET | `/api/sessions?season=2026` | Historia zakończonych wieczorów |
 | GET | `/api/players/:id/stats?season=2026` | Profil gracza |
 
 JSON w API używa camelCase (kształty: `shared/dto.ts`); w bazie kolumny zostają snake_case.
 
-Bezpieczeństwo: wszystkie zapisy (POST/PUT/PATCH/DELETE) wymagają nagłówka `Cf-Access-Authenticated-User-Email` (ustawia go Cloudflare Access); brak → 401. Lokalnie w dev — zmienna `DEV_USER_EMAIL`.
+Bezpieczeństwo: wszystkie zapisy (POST/PUT/PATCH/DELETE) wymagają kodu grupy (nagłówek `X-Edit-Code`) albo — z własną domeną — zweryfikowanego tokenu Cloudflare Access; brak → 401. Lokalnie w dev — zmienna `DEV_USER_EMAIL`. Szczegóły: README, sekcja „Dostęp”.
 
 Logikę (losowanie, tabela, przycinanie, `step`) trzymaj w osobnym module `shared/` bez zależności od Cloudflare, żeby testować ją Vitestem i używać w API.
 
@@ -234,9 +237,9 @@ Pracuj etapami; po każdym etapie zatrzymaj się, pokaż wynik i poczekaj na akc
 - **Gotowe, gdy:** pierwszy prawdziwy wieczór rozegrany i zapisany
 
 ### Etap 6. Po pierwszych wieczorach
-- [ ] Edycja wyniku w zapisanym wieczorze
-- [ ] Cofnięcie ostatniej rundy w trakcie gry
-- [ ] Eksport / kopia zapasowa bazy
+- [x] Edycja wyniku w zapisanym wieczorze (Historia → „Popraw wynik”, znacznik „poprawiony”)
+- [x] Cofnięcie ostatniej rundy w trakcie gry
+- [x] Eksport / kopia zapasowa bazy (JSON z aplikacji, `npm run backup` → SQL)
 
 ### Później (nie teraz)
 - Wariant Mexicano, własna domena, wykresy formy, porównanie dwóch graczy, archiwum sezonów
@@ -247,7 +250,7 @@ Pracuj etapami; po każdym etapie zatrzymaj się, pokaż wynik i poczekaj na akc
 
 | Kwestia | Domyślnie |
 | --- | --- |
-| Ranking i historia publiczne czy za logowaniem? | Cała strona za Access; łatwo zmienić na ochronę tylko zapisów |
+| Ranking i historia publiczne czy za logowaniem? | Publiczne do odczytu, zapisy po kodzie grupy |
 | Ranking sezonu: suma czy średnia? | Suma (wieczory są wyrównane), przełącznik na średnią |
 | Domena | Na start `*.workers.dev` |
 | Goście w rankingu sezonu | Osobna sekcja pod tabelą |

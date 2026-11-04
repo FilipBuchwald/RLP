@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { nextEqualRound, stepFor } from '../../../shared/americano'
 import type { MatchDto, SessionDto, UnequalDto } from '../../../shared/dto'
+import { MatchCard } from '../../components/MatchCard'
 import { matchCounts, sortRows, table } from '../../../shared/stats'
 import { ApiError, api, isCodeError, isUnequal } from '../../api'
 import { errorMessage, useToast } from '../../context'
@@ -97,63 +98,6 @@ function usePendingScores(sessionId: string) {
   return { pending, set, flush }
 }
 
-function MatchCard({
-  match,
-  target,
-  scoreA,
-  onScore,
-  readOnly,
-}: {
-  match: MatchDto
-  target: number
-  scoreA: number | null
-  onScore: (side: 'a' | 'b', delta: number) => void
-  readOnly?: boolean
-}) {
-  const player = usePlayerLookup()
-  const scoreB = scoreA == null ? null : target - scoreA
-
-  const side = (s: 'a' | 'b') => {
-    const team = s === 'a' ? match.a : match.b
-    const sc = s === 'a' ? scoreA : scoreB
-    const other = s === 'a' ? scoreB : scoreA
-    return (
-      <div className={`side ${sc != null && other != null && sc > other ? 'win' : ''}`}>
-        <div className="names">
-          <div>{player(team[0]).name}</div>
-          <div>{player(team[1]).name}</div>
-        </div>
-        <div className="ctrl">
-          {!readOnly && (
-            <button onClick={() => onScore(s, -1)} aria-label="minus">
-              −
-            </button>
-          )}
-          <div className="sc">{sc ?? '–'}</div>
-          {!readOnly && (
-            <button onClick={() => onScore(s, 1)} aria-label="plus">
-              +
-            </button>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className={`match ${scoreA != null ? 'done' : ''}`}>
-      <div className="court">
-        <span>Kort {match.court}</span>
-        <span>
-          {scoreA != null ? `suma ${target}/${target}` : readOnly ? 'gra trwa' : 'wpisz wynik'}
-        </span>
-      </div>
-      {side('a')}
-      {side('b')}
-    </div>
-  )
-}
-
 export function Live({
   session: s,
   readOnly = false,
@@ -174,6 +118,8 @@ export function Live({
   const [cancelArmed, setCancelArmed] = useState(false)
   // Zakończenie bez żadnej rozegranej rundy usuwa wieczór — wymaga drugiego kliknięcia.
   const [emptyFinishArmed, setEmptyFinishArmed] = useState(false)
+  // Cofnięcie rundy usuwa jej losowanie i wyniki — też dwa kliknięcia.
+  const [undoArmed, setUndoArmed] = useState(false)
 
   // Widok z lokalnymi (jeszcze niezapisanymi) wynikami.
   const view: SessionDto = {
@@ -198,6 +144,7 @@ export function Live({
   function score(m: MatchDto, side: 'a' | 'b', delta: number) {
     setCancelArmed(false)
     setEmptyFinishArmed(false)
+    setUndoArmed(false)
     const base = pending[m.id] ?? m.scoreA ?? Math.floor(s.target / 2)
     const next = Math.max(0, Math.min(s.target, base + (side === 'a' ? delta : -delta)))
     set(m.id, next)
@@ -207,6 +154,7 @@ export function Live({
     if (busy) return
     setBusy(true)
     setCancelArmed(false)
+    setUndoArmed(false)
     try {
       await action()
     } catch (e) {
@@ -225,6 +173,18 @@ export function Live({
       qc.setQueryData(keys.live, await api.nextRound(s.id))
       window.scrollTo({ top: 0, behavior: 'smooth' })
     })
+
+  const canUndo = s.rounds.length >= 2
+  const curHasScores = cur.matches.some((m) => m.scoreA != null)
+  const undo = () => {
+    if (!undoArmed) return setUndoArmed(true)
+    void run(async () => {
+      await flush()
+      qc.setQueryData(keys.live, await api.undoRound(s.id, cur.number))
+      toast(`Cofnięto rundę ${cur.number} — runda ${cur.number - 1} znów jest bieżąca`)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    })
+  }
 
   const finish = (cap?: number) =>
     run(async () => {
@@ -363,6 +323,13 @@ export function Live({
                     : 'Zakończ wieczór i zapisz'}
               </button>
             </>
+          )}
+          {canUndo && (
+            <button className="btn ghost small muted" disabled={busy} onClick={undo}>
+              {undoArmed
+                ? `Na pewno? Losowanie${curHasScores ? ' i wyniki' : ''} rundy ${cur.number} znikną — kliknij ponownie`
+                : `↩ Cofnij rundę ${cur.number} (wróć do rundy ${cur.number - 1})`}
+            </button>
           )}
         </div>
       )}

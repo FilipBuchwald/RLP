@@ -9,6 +9,7 @@
     "preview": "npm run build && vite preview",
     "migrate": "wrangler d1 migrations apply padel-liga --local",
     "migrate:remote": "wrangler d1 migrations apply padel-liga --remote",
+    "backup": "tsx scripts/backup.ts",
     "deploy": "npm run build && wrangler deploy",
     "typecheck": "tsc -b",
     "lint": "eslint .",

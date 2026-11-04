@@ -129,6 +129,70 @@ export const nextRound: Handler = async ({ env, params }) => {
   return reload(env.DB, s.id)
 }
 
+// DELETE /api/sessions/:id/rounds/:number → cofa ostatnią rundę (razem z jej wynikami).
+// Poprzednia runda znów jest bieżąca: można poprawić jej wynik i wylosować dalej.
+export const undoRound: Handler = async ({ env, params }) => {
+  const s = await liveSessionById(env.DB, params.id!)
+  const last = s.rounds.at(-1)
+  if (!last || String(last.number) !== params.number)
+    throw conflict('To już nie jest ostatnia runda — odśwież')
+  if (s.rounds.length < 2) throw conflict('To pierwsza runda — jeśli trzeba, odrzuć cały wieczór')
+
+  // Warunek w SQL, bo w międzyczasie inny telefon mógł wylosować rundę albo zakończyć wieczór:
+  // usuwamy tylko wtedy, gdy to nadal ostatnia runda trwającego wieczoru.
+  const stillLast = `? = (SELECT MAX(number) FROM rounds WHERE session_id = ?)
+    AND (SELECT status FROM sessions WHERE id = ?) = 'live'`
+  const db = env.DB
+  await db.batch([
+    db
+      .prepare(`DELETE FROM matches WHERE round_id = ? AND ${stillLast}`)
+      .bind(last.id, last.number, s.id, s.id),
+    db
+      .prepare(`DELETE FROM rounds WHERE id = ? AND ${stillLast}`)
+      .bind(last.id, last.number, s.id, s.id),
+  ])
+  return reload(db, s.id)
+}
+
+const MAX_SCORE_EDITS = 200
+
+// PUT /api/sessions/:id/scores { scores: [{ matchId, scoreA }] } → poprawki w zapisanym wieczorze.
+// Wszystkie naraz (atomowo); scoreB = target − scoreA. Liczba meczów się nie zmienia, więc
+// przycięcie (cap) zostaje ważne.
+export const editScores: Handler = async ({ request, env, params }) => {
+  const s = await loadSession(env.DB, params.id!)
+  if (!s) throw notFound('Nie ma takiego wieczoru')
+  if (s.status !== 'done') throw conflict('Wieczór trwa — wyniki wpisuj na żywo')
+
+  const body = await readBody(request)
+  if (!Array.isArray(body.scores) || body.scores.length > MAX_SCORE_EDITS)
+    throw badRequest('Pole scores: lista { matchId, scoreA }')
+  const current = new Map(s.rounds.flatMap((r) => r.matches).map((m) => [m.id, m.scoreA]))
+  const changes = new Map<string, number>()
+  for (const item of body.scores as unknown[]) {
+    const { matchId, scoreA } = (item ?? {}) as Record<string, unknown>
+    if (typeof matchId !== 'string' || !current.has(matchId))
+      throw badRequest('Mecz spoza tego wieczoru')
+    const value = int(scoreA, 'scoreA', 0, s.target)
+    if (current.get(matchId) !== value) changes.set(matchId, value)
+    else changes.delete(matchId)
+  }
+  if (changes.size === 0) return json(s)
+
+  const db = env.DB
+  await db.batch([
+    ...[...changes].map(([id, a]) =>
+      db
+        .prepare('UPDATE matches SET score_a = ?, score_b = ? WHERE id = ?')
+        .bind(a, s.target - a, id),
+    ),
+    db
+      .prepare("UPDATE sessions SET edited_at = datetime('now') WHERE id = ? AND status = 'done'")
+      .bind(s.id),
+  ])
+  return reload(db, s.id)
+}
+
 // POST /api/sessions/:id/finish { cap? }
 // Niedokończone rundy są odrzucane. Nierówne liczby meczów bez `cap` → 409 z licznikami.
 export const finish: Handler = async ({ request, env, params }) => {

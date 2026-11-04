@@ -26,3 +26,6 @@ dist-ssr
 # Cloudflare
 .wrangler
 .dev.vars
+
+# Kopie zapasowe bazy (npm run backup) — dane graczy, nie do repo
+backups
