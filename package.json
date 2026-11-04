@@ -13,7 +13,9 @@
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "react": "^19.3.1",
@@ -36,6 +38,7 @@
     "typescript": "~6.0",
     "typescript-eslint": "^8.72.1",
     "vite": "^8.3.5",
+    "vitest": "^5.1.0",
     "wrangler": "^4.157.0"
   }
 }

@@ -24,6 +24,7 @@ Workera (`worker/index.ts`) i lokalną D1 w prawdziwym runtime Workers.
 | `preview`                     | build + podgląd produkcyjnej wersji lokalnie                              |
 | `migrate` / `migrate:remote`  | migracje D1 lokalnie / na Cloudflare                                      |
 | `deploy`                      | build + `wrangler deploy` (ręcznie; normalnie deploy robi push na `main`) |
+| `test` / `test:watch`         | testy Vitest logiki z `shared/`                                           |
 | `lint`, `format`, `typecheck` | ESLint, Prettier, TypeScript                                              |
 
 ## Wdrożenie
