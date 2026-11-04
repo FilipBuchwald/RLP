@@ -36,17 +36,17 @@ const MAX_PLAYERS = 16
 
 async function liveSessionById(db: D1Database, id: string): Promise<SessionDto> {
   const s = await loadSession(db, id)
-  if (!s) throw notFound('Nie ma takiego wieczoru')
-  if (s.status !== 'live') throw conflict('Wieczór jest już zakończony')
+  if (!s) throw notFound('Nie ma takiego turnieju')
+  if (s.status !== 'live') throw conflict('Turniej jest już zakończony')
   return s
 }
 
 const reload = async (db: D1Database, id: string) => json(await loadSession(db, id))
 
-// GET /api/sessions/live → wieczór na żywo albo null
+// GET /api/sessions/live → turniej na żywo albo null
 export const live: Handler = async ({ env }) => json(await loadLiveSession(env.DB))
 
-// GET /api/sessions?season=2026 → zakończone wieczory, od najnowszego
+// GET /api/sessions?season=2026 → zakończone turnieje, od najnowszego
 export const history: Handler = async ({ env, url }) => {
   const season = seasonParam(url, currentSeason())
   const sessions = await loadSessions(env.DB, "sessions.season = ? AND sessions.status = 'done'", [
@@ -56,7 +56,7 @@ export const history: Handler = async ({ env, url }) => {
 }
 
 // POST /api/sessions { playerIds, targetPoints, courts, mode, plannedRounds? }
-// Tworzy wieczór i od razu losuje 1. rundę — wszystko w jednym batchu (atomowo).
+// Tworzy turniej i od razu losuje 1. rundę — wszystko w jednym batchu (atomowo).
 export const create: Handler = async ({ request, env, user }) => {
   const body = await readBody(request)
 
@@ -86,7 +86,7 @@ export const create: Handler = async ({ request, env, user }) => {
   if (known.length !== playerIds.length) throw badRequest('Nieznany gracz na liście')
 
   if (await loadLiveSession(env.DB))
-    throw conflict('Trwa już inny wieczór — zakończ go albo odrzuć')
+    throw conflict('Trwa już inny turniej — zakończ go albo odrzuć')
 
   const id = newId()
   const date = todayWarsaw()
@@ -105,7 +105,7 @@ export const create: Handler = async ({ request, env, user }) => {
       ...insertRound(db, id, makeRound(playerIds, [], courts)),
     ])
   } catch (e) {
-    if (isUniqueViolation(e, 'sessions.status')) throw conflict('Trwa już inny wieczór')
+    if (isUniqueViolation(e, 'sessions.status')) throw conflict('Trwa już inny turniej')
     throw e
   }
   return json(await loadSession(db, id), 201)
@@ -117,7 +117,7 @@ export const nextRound: Handler = async ({ env, params }) => {
   const current = s.rounds.at(-1)
   if (current && !isRoundComplete(current)) throw conflict('Bieżąca runda nie ma kompletu wyników')
   if (s.plannedRounds != null && s.rounds.length >= s.plannedRounds)
-    throw conflict('Plan rund jest zakończony — zakończ wieczór')
+    throw conflict('Plan rund jest zakończony — zakończ turniej')
 
   try {
     await env.DB.batch(insertRound(env.DB, s.id, makeRound(s.players, s.rounds, s.courts)))
@@ -136,10 +136,10 @@ export const undoRound: Handler = async ({ env, params }) => {
   const last = s.rounds.at(-1)
   if (!last || String(last.number) !== params.number)
     throw conflict('To już nie jest ostatnia runda — odśwież')
-  if (s.rounds.length < 2) throw conflict('To pierwsza runda — jeśli trzeba, odrzuć cały wieczór')
+  if (s.rounds.length < 2) throw conflict('To pierwsza runda — jeśli trzeba, odrzuć cały turniej')
 
-  // Warunek w SQL, bo w międzyczasie inny telefon mógł wylosować rundę albo zakończyć wieczór:
-  // usuwamy tylko wtedy, gdy to nadal ostatnia runda trwającego wieczoru.
+  // Warunek w SQL, bo w międzyczasie inny telefon mógł wylosować rundę albo zakończyć turniej:
+  // usuwamy tylko wtedy, gdy to nadal ostatnia runda trwającego turnieju.
   const stillLast = `? = (SELECT MAX(number) FROM rounds WHERE session_id = ?)
     AND (SELECT status FROM sessions WHERE id = ?) = 'live'`
   const db = env.DB
@@ -156,13 +156,13 @@ export const undoRound: Handler = async ({ env, params }) => {
 
 const MAX_SCORE_EDITS = 200
 
-// PUT /api/sessions/:id/scores { scores: [{ matchId, scoreA }] } → poprawki w zapisanym wieczorze.
+// PUT /api/sessions/:id/scores { scores: [{ matchId, scoreA }] } → poprawki w zapisanym turnieju.
 // Wszystkie naraz (atomowo); scoreB = target − scoreA. Liczba meczów się nie zmienia, więc
 // przycięcie (cap) zostaje ważne.
 export const editScores: Handler = async ({ request, env, params }) => {
   const s = await loadSession(env.DB, params.id!)
-  if (!s) throw notFound('Nie ma takiego wieczoru')
-  if (s.status !== 'done') throw conflict('Wieczór trwa — wyniki wpisuj na żywo')
+  if (!s) throw notFound('Nie ma takiego turnieju')
+  if (s.status !== 'done') throw conflict('Turniej trwa — wyniki wpisuj na żywo')
 
   const body = await readBody(request)
   if (!Array.isArray(body.scores) || body.scores.length > MAX_SCORE_EDITS)
@@ -172,7 +172,7 @@ export const editScores: Handler = async ({ request, env, params }) => {
   for (const item of body.scores as unknown[]) {
     const { matchId, scoreA } = (item ?? {}) as Record<string, unknown>
     if (typeof matchId !== 'string' || !current.has(matchId))
-      throw badRequest('Mecz spoza tego wieczoru')
+      throw badRequest('Mecz spoza tego turnieju')
     const value = int(scoreA, 'scoreA', 0, s.target)
     if (current.get(matchId) !== value) changes.set(matchId, value)
     else changes.delete(matchId)
@@ -203,7 +203,7 @@ export const finish: Handler = async ({ request, env, params }) => {
   const incomplete = s.rounds.filter((r) => !isRoundComplete(r))
   const st = equalityStatus(s)
 
-  // Nic nie zostało rozegrane — wieczór znika, jak w prototypie.
+  // Nic nie zostało rozegrane — turniej znika, jak w prototypie.
   if (st.completeRounds === 0) {
     await db.batch(deleteSession(db, s.id))
     return noContent()
@@ -238,7 +238,7 @@ export const finish: Handler = async ({ request, env, params }) => {
   return reload(db, s.id)
 }
 
-// DELETE /api/sessions/:id → odrzuca trwający wieczór bez zapisu
+// DELETE /api/sessions/:id → odrzuca trwający turniej bez zapisu
 export const discard: Handler = async ({ env, params }) => {
   const s = await liveSessionById(env.DB, params.id!)
   await env.DB.batch(deleteSession(env.DB, s.id))

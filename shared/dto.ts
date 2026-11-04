@@ -31,14 +31,14 @@ export interface RoundDto extends Round {
   matches: MatchDto[]
 }
 
-/** Wieczór z rundami i meczami. Zgodny z `SessionData`, więc działa z funkcjami z shared/stats. */
+/** Turniej z rundami i meczami. Zgodny z `SessionData`, więc działa z funkcjami z shared/stats. */
 export interface SessionDto extends SessionData {
   season: number
   mode: SessionMode
   plannedRounds: number | null
   status: SessionStatus
   createdBy: string | null
-  /** Kiedy poprawiono wyniki po zapisaniu wieczoru (ISO, UTC), null = nigdy. */
+  /** Kiedy poprawiono wyniki po zapisaniu turnieju (ISO, UTC), null = nigdy. */
   editedAt: string | null
   rounds: RoundDto[]
 }
@@ -92,7 +92,7 @@ export interface ScoreBody {
 export interface FinishBody {
   cap?: number
 }
-/** Poprawki wyników zapisanego wieczoru — wszystkie naraz (atomowo). */
+/** Poprawki wyników zapisanego turnieju — wszystkie naraz (atomowo). */
 export interface ScoresBody {
   scores: { matchId: string; scoreA: number }[]
 }

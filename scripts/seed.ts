@@ -1,4 +1,4 @@
-// Dane demo do lokalnego testowania (jak w prototypie): 8 stałych graczy + gość, 5 wieczorów.
+// Dane demo do lokalnego testowania (jak w prototypie): 8 stałych graczy + gość, 5 turniejów.
 // Użycie: npm run seed  (czyści LOKALNĄ bazę i wgrywa dane demo)
 import { writeFileSync } from 'node:fs'
 import { makeRound, seededRandom, stepFor } from '../shared/americano'
@@ -67,7 +67,7 @@ nights.forEach((n, si) => {
     })
   }
   const st = equalityStatus({ players, rounds })
-  if (!st.equal && !n.trim) throw new Error(`Wieczór ${n.date}: nierówno, a nie ma przycięcia`)
+  if (!st.equal && !n.trim) throw new Error(`Turniej ${n.date}: nierówno, a nie ma przycięcia`)
   if (n.plan && n.rounds % stepFor(players.length, n.courts) !== 0)
     throw new Error(`Zły plan ${n.date}`)
   const cap = st.equal ? null : st.min

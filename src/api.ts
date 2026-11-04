@@ -106,14 +106,14 @@ export const api = {
   setScore: (matchId: string, scoreA: number) =>
     request<SessionDto>('PUT', `/matches/${matchId}`, { scoreA }),
   nextRound: (id: string) => request<SessionDto>('POST', `/sessions/${id}/rounds`),
-  /** null = wieczór bez rozegranych rund został usunięty */
+  /** null = turniej bez rozegranych rund został usunięty */
   finish: (id: string, cap?: number) =>
     request<SessionDto | null>('POST', `/sessions/${id}/finish`, cap === undefined ? {} : { cap }),
   discard: (id: string) => request<null>('DELETE', `/sessions/${id}`),
-  /** Cofa ostatnią rundę wieczoru na żywo; `number` = numer tej rundy (chroni przed podwójnym cofnięciem). */
+  /** Cofa ostatnią rundę turnieju na żywo; `number` = numer tej rundy (chroni przed podwójnym cofnięciem). */
   undoRound: (id: string, number: number) =>
     request<SessionDto>('DELETE', `/sessions/${id}/rounds/${number}`),
-  /** Poprawki wyników w zapisanym wieczorze — wszystkie naraz. */
+  /** Poprawki wyników w zapisanym turnieju — wszystkie naraz. */
   editScores: (id: string, scores: ScoresBody['scores']) =>
     request<SessionDto>('PUT', `/sessions/${id}/scores`, { scores } satisfies ScoresBody),
 }

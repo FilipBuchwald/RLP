@@ -12,7 +12,7 @@ export const setScore: Handler = async ({ request, env, params }) => {
     .bind(params.id!)
     .first<{ session_id: string; status: string; target_points: number }>()
   if (!row) throw notFound('Nie ma takiego meczu')
-  if (row.status !== 'live') throw conflict('Wieczór jest już zakończony — popraw wynik w Historii')
+  if (row.status !== 'live') throw conflict('Turniej jest już zakończony — popraw wynik w Historii')
 
   const body = await readBody(request)
   const scoreA = int(body.scoreA, 'scoreA', 0, row.target_points)

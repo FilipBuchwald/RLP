@@ -27,7 +27,7 @@ export function Game() {
           session={live}
           readOnly={!canWrite}
           footer={
-            !canWrite && codeMode ? <EditCodeForm title="Prowadzisz ten wieczór?" /> : undefined
+            !canWrite && codeMode ? <EditCodeForm title="Prowadzisz ten turniej?" /> : undefined
           }
         />
         {forget}
@@ -45,7 +45,7 @@ export function Game() {
   return (
     <>
       <h2>Gra</h2>
-      <div className="empty">Teraz nie trwa żaden wieczór.</div>
+      <div className="empty">Teraz nie trwa żaden turniej.</div>
       {codeMode ? (
         <EditCodeForm title="Zaczynacie grać?" />
       ) : (

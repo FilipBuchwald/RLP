@@ -4,7 +4,7 @@ import { api, editCode } from '../api'
 import { useToast } from '../context'
 import { keys } from '../queries'
 
-/** „Wpisz kod grupy” — po poprawnym kodzie telefon może prowadzić wieczór. */
+/** „Wpisz kod grupy” — po poprawnym kodzie telefon może prowadzić turniej. */
 export function EditCodeForm({ title }: { title: string }) {
   const qc = useQueryClient()
   const toast = useToast()
@@ -38,7 +38,7 @@ export function EditCodeForm({ title }: { title: string }) {
     <div className="card">
       <div style={{ fontWeight: 600, marginBottom: 4 }}>{title}</div>
       <div className="muted small" style={{ marginBottom: 10 }}>
-        Oglądać może każdy. Żeby zacząć wieczór i wpisywać wyniki, wpisz kod Waszej grupy — telefon
+        Oglądać może każdy. Żeby zacząć turniej i wpisywać wyniki, wpisz kod Waszej grupy — telefon
         go zapamięta.
       </div>
       <form className="row" onSubmit={submit}>

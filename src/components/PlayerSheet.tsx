@@ -81,7 +81,7 @@ export function PlayerSheet({ id, onClose }: { id: string; onClose: () => void }
           <h2>Szczegóły</h2>
           <div className="card">
             <div className="kv">
-              <span className="muted">Wieczory</span>
+              <span className="muted">Turnieje</span>
               <b>{p.row.nights}</b>
             </div>
             <div className="kv">

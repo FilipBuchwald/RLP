@@ -116,7 +116,7 @@ export function Live({
   const [busy, setBusy] = useState(false)
   const [unequal, setUnequal] = useState<UnequalDto | null>(null)
   const [cancelArmed, setCancelArmed] = useState(false)
-  // Zakończenie bez żadnej rozegranej rundy usuwa wieczór — wymaga drugiego kliknięcia.
+  // Zakończenie bez żadnej rozegranej rundy usuwa turniej — wymaga drugiego kliknięcia.
   const [emptyFinishArmed, setEmptyFinishArmed] = useState(false)
   // Cofnięcie rundy usuwa jej losowanie i wyniki — też dwa kliknięcia.
   const [undoArmed, setUndoArmed] = useState(false)
@@ -158,7 +158,7 @@ export function Live({
     try {
       await action()
     } catch (e) {
-      // Inny telefon mógł już wylosować rundę albo zakończyć wieczór — pokaż stan z serwera.
+      // Inny telefon mógł już wylosować rundę albo zakończyć turniej — pokaż stan z serwera.
       if (!(e instanceof ApiError && e.status === 409)) toast(errorMessage(e))
       if (isCodeError(e)) await qc.invalidateQueries({ queryKey: keys.me })
       await qc.invalidateQueries({ queryKey: keys.live })
@@ -304,7 +304,7 @@ export function Live({
               disabled={!allScored || busy}
               onClick={() => finish()}
             >
-              Zakończ wieczór i zapisz ✓
+              Zakończ turniej i zapisz ✓
             </button>
           ) : (
             <>
@@ -317,10 +317,10 @@ export function Live({
               </button>
               <button className="btn block" disabled={busy} onClick={onFinishClick}>
                 {emptyFinishArmed
-                  ? 'Nic nie rozegrano — kliknij ponownie, żeby odrzucić wieczór'
+                  ? 'Nic nie rozegrano — kliknij ponownie, żeby odrzucić turniej'
                   : plan
                     ? 'Zakończ wcześniej'
-                    : 'Zakończ wieczór i zapisz'}
+                    : 'Zakończ turniej i zapisz'}
               </button>
             </>
           )}
@@ -334,7 +334,7 @@ export function Live({
         </div>
       )}
 
-      <h2>Tabela wieczoru</h2>
+      <h2>Tabela turnieju</h2>
       <StatsTable rows={sortRows(table([view]))} compact />
 
       {prev.length > 0 && (
@@ -352,8 +352,8 @@ export function Live({
         <div style={{ marginTop: 14, textAlign: 'center' }}>
           <button className="btn ghost small muted" disabled={busy} onClick={discard}>
             {cancelArmed
-              ? 'Na pewno? Kliknij ponownie, żeby odrzucić wieczór'
-              : 'Odrzuć wieczór bez zapisu'}
+              ? 'Na pewno? Kliknij ponownie, żeby odrzucić turniej'
+              : 'Odrzuć turniej bez zapisu'}
           </button>
         </div>
       )}

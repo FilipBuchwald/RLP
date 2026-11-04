@@ -1,4 +1,4 @@
-// Tabela wieczoru, ranking sezonu, przycinanie i profil gracza.
+// Tabela turnieju, ranking sezonu, przycinanie i profil gracza.
 // Nic nie jest zapisywane — wszystko liczymy z meczów (i z `cap` sesji).
 import type { Match, PlayerId, Round, SessionData } from './types'
 
@@ -104,7 +104,7 @@ export interface StatsRow {
   winRate: number
 }
 
-/** Tabela dla zestawu wieczorów (jeden wieczór = tabela wieczoru, sezon = ranking). */
+/** Tabela dla zestawu turniejów (jeden turniej = tabela turnieju, sezon = ranking). */
 export function table(sessions: readonly SessionData[]): StatsRow[] {
   const t = new Map<PlayerId, Omit<StatsRow, 'nights' | 'avg' | 'winRate'> & { n: Set<string> }>()
   const get = (id: PlayerId) => {
@@ -156,7 +156,7 @@ export function ranking(
   return { regulars: rows.filter((r) => !isGuest(r.id)), guests: rows.filter((r) => isGuest(r.id)) }
 }
 
-/** Czy wszyscy mają równo meczów (tylko ukończone rundy) — do zakończenia wieczoru. */
+/** Czy wszyscy mają równo meczów (tylko ukończone rundy) — do zakończenia turnieju. */
 export function equalityStatus(session: Pick<SessionData, 'players' | 'rounds'>) {
   const rounds = session.rounds.filter(isRoundComplete)
   const counts = matchCounts(session.players, rounds)

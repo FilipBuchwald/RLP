@@ -45,7 +45,7 @@ export class Router {
           return errorResponse(429, 'Za dużo błędnych prób — spróbuj za kwadrans')
         if (code === 'wrong') return errorResponse(401, 'Zły kod', { code: 'wrong_code' })
         if (mode === 'code')
-          return errorResponse(401, 'Wpisz kod, żeby prowadzić wieczór', { code: 'need_code' })
+          return errorResponse(401, 'Wpisz kod, żeby prowadzić turniej', { code: 'need_code' })
         return errorResponse(401, 'Zapisy są wyłączone')
       }
       try {

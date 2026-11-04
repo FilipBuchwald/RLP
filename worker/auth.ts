@@ -15,7 +15,7 @@ export type AuthResult =
   | { ok: false; status: 401; message: string }
 
 export const CODE_HEADER = 'X-Edit-Code'
-/** Kto zapisał wieczór w trybie kodu (kolumna sessions.created_by). */
+/** Kto zapisał turniej w trybie kodu (kolumna sessions.created_by). */
 export const CODE_USER = 'kod grupy'
 export const MIN_CODE_LENGTH = 6
 

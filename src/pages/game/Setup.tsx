@@ -104,7 +104,7 @@ export function Setup() {
 
   return (
     <>
-      <h2>Nowy wieczór · Americano</h2>
+      <h2>Nowy turniej · Americano</h2>
       <div className="card">
         <div className="muted small" style={{ marginBottom: 10 }}>
           Kto dziś gra? <b style={{ color: 'var(--tx)' }}>{n}</b>{' '}

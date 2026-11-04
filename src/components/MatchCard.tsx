@@ -1,7 +1,7 @@
 import type { MatchDto } from '../../shared/dto'
 import { usePlayerLookup } from '../queries'
 
-/** Mecz z wynikiem i przyciskami +/− (na żywo i przy poprawianiu zapisanego wieczoru). */
+/** Mecz z wynikiem i przyciskami +/− (na żywo i przy poprawianiu zapisanego turnieju). */
 export function MatchCard({
   match,
   target,

@@ -6,7 +6,7 @@ import { Dot } from './Dot'
 type Props = {
   rows: StatsRow[]
   highlight?: SortBy
-  /** Tabela wieczoru: bez kolumny % wygranych i bez otwierania profilu. */
+  /** Tabela turnieju: bez kolumny % wygranych i bez otwierania profilu. */
   compact?: boolean
 }
 

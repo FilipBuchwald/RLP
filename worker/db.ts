@@ -1,4 +1,4 @@
-// Dostęp do D1: wczytywanie wieczorów w kształcie SessionDto i budowanie zapisów.
+// Dostęp do D1: wczytywanie turniejów w kształcie SessionDto i budowanie zapisów.
 import type {
   MatchDto,
   PlayerDto,
@@ -43,7 +43,7 @@ export async function getPlayer(db: D1Database, id: string): Promise<PlayerDto |
   return row ? toPlayer(row) : null
 }
 
-// --- wieczory ---
+// --- turnieje ---
 
 type SessionRow = {
   id: string
@@ -73,7 +73,7 @@ type MatchRow = {
 }
 
 /**
- * Wczytuje wieczory z rundami i meczami (4 zapytania w jednym batchu = spójny odczyt).
+ * Wczytuje turnieje z rundami i meczami (4 zapytania w jednym batchu = spójny odczyt).
  * `where` odnosi się do tabeli `sessions`, np. "sessions.status = 'live'".
  */
 export async function loadSessions(
@@ -183,7 +183,7 @@ export function insertRound(
   ]
 }
 
-/** DELETE-y całego wieczoru (jawnie, bez polegania na ON DELETE CASCADE). */
+/** DELETE-y całego turnieju (jawnie, bez polegania na ON DELETE CASCADE). */
 export function deleteSession(db: D1Database, sessionId: string): D1PreparedStatement[] {
   return [
     db

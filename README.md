@@ -1,6 +1,6 @@
-# Padel Liga
+# Rybnicka Liga Padologiczna
 
-PWA do grania w padla (Americano) ze znajomymi: prowadzenie wieczoru, ranking sezonu, historia.
+PWA do grania w padla (Americano) ze znajomymi: prowadzenie turnieju, ranking sezonu, historia.
 Plan prac: [PLAN.md](PLAN.md). Wzór wyglądu i logiki: [prototype-reference.html](prototype-reference.html).
 
 Stack: React + Vite + TypeScript · Cloudflare Workers (statyczny frontend + `/api/*`) · D1 (SQLite).
@@ -24,8 +24,8 @@ Workera (`worker/index.ts`) i lokalną D1 w prawdziwym runtime Workers.
 | `preview`                     | build + podgląd produkcyjnej wersji lokalnie                                      |
 | `migrate` / `migrate:remote`  | migracje D1 lokalnie / na Cloudflare                                              |
 | `deploy`                      | build + `wrangler deploy` (ręcznie; normalnie deploy robi push na `main`)         |
-| `seed`                        | czyści **lokalną** bazę i wgrywa dane demo (8 graczy + gość, 5 wieczorów)         |
-| `smoke`                       | rozgrywa całe wieczory przez API na lokalnym `npm run dev` (potem `npm run seed`) |
+| `seed`                        | czyści **lokalną** bazę i wgrywa dane demo (8 graczy + gość, 5 turniejów)         |
+| `smoke`                       | rozgrywa całe turnieje przez API na lokalnym `npm run dev` (potem `npm run seed`) |
 | `backup`                      | pełna kopia bazy **produkcyjnej** do `backups/*.sql` (sekcja „Kopia zapasowa”)    |
 | `test` / `test:watch`         | testy Vitest logiki z `shared/`                                                   |
 | `lint`, `format`, `typecheck` | ESLint, Prettier, TypeScript                                                      |
@@ -33,7 +33,7 @@ Workera (`worker/index.ts`) i lokalną D1 w prawdziwym runtime Workers.
 ## API
 
 Endpointy: [PLAN.md, sekcja 5](PLAN.md). Kształty JSON-a: `shared/dto.ts`.
-Wieczór i każda runda zapisują się atomowo (`DB.batch`).
+Turniej i każda runda zapisują się atomowo (`DB.batch`).
 
 Kto pisze do bazy: `worker/auth.ts` (po kolei):
 
@@ -58,9 +58,9 @@ Zmiany schematu bazy: dodaj plik w `migrations/` i uruchom `npm run migrate:remo
 ## Kopia zapasowa
 
 - **Z aplikacji (każdy):** Historia → „Pobierz kopię danych (JSON)” albo `GET /api/export`.
-  Czytelny komplet: gracze i wszystkie wieczory z wynikami. Dobry do archiwum i Excela.
+  Czytelny komplet: gracze i wszystkie turnieje z wynikami. Dobry do archiwum i Excela.
 - **Pełna kopia SQL:** `npm run backup` → `backups/padel-liga-RRRRMMDD-GGMM.sql`
-  (schemat + dane, folder poza repo). Warto co kilka wieczorów albo przed większą zmianą.
+  (schemat + dane, folder poza repo). Warto co kilka turniejów albo przed większą zmianą.
 - **Cofnięcie w czasie (D1 Time Travel):** Cloudflare sam trzyma historię bazy
   (plan Free: 7 dni, płatny: 30 dni) — bez żadnej konfiguracji:
 
@@ -90,8 +90,8 @@ migrations/ SQL dla D1
 
 ## Dostęp
 
-**Teraz: wspólny kod grupy.** Oglądać (Ranking, Historia, wieczór na żywo) może każdy, kto ma link.
-Żeby zacząć wieczór, wpisywać wyniki albo dodawać graczy, telefon raz podaje kod grupy
+**Teraz: wspólny kod grupy.** Oglądać (Ranking, Historia, turniej na żywo) może każdy, kto ma link.
+Żeby zacząć turniej, wpisywać wyniki albo dodawać graczy, telefon raz podaje kod grupy
 (zakładka Gra → „Kod grupy”) i go zapamiętuje. Spacje i wielkość liter nie mają znaczenia.
 
 - Ustawienie / zmiana kodu (min. 6 znaków, lepiej 8+):

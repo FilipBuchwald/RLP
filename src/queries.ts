@@ -1,4 +1,4 @@
-// Dane z API przez TanStack Query: cache, odpytywanie wieczoru na żywo, odświeżanie po zapisach.
+// Dane z API przez TanStack Query: cache, odpytywanie turnieju na żywo, odświeżanie po zapisach.
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useMemo } from 'react'
 import type { PlayerDto } from '../shared/dto'
@@ -15,7 +15,7 @@ export const keys = {
   playerStats: (id: string, season: number) => ['playerStats', id, season] as const,
 }
 
-/** Bieżący wieczór — odpytywany co 5 s, żeby wszystkie telefony widziały to samo. */
+/** Bieżący turniej — odpytywany co 5 s, żeby wszystkie telefony widziały to samo. */
 export const useLive = () =>
   useQuery({ queryKey: keys.live, queryFn: api.live, refetchInterval: LIVE_POLL_MS })
 
@@ -47,7 +47,7 @@ export function usePlayerLookup() {
   return useCallback((id: string) => map.get(id) ?? { ...UNKNOWN, id }, [map])
 }
 
-/** Po zakończeniu / odrzuceniu wieczoru albo zmianie gracza odśwież wszystko, co od tego zależy. */
+/** Po zakończeniu / odrzuceniu turnieju albo zmianie gracza odśwież wszystko, co od tego zależy. */
 export function useInvalidateAll() {
   const qc = useQueryClient()
   return useCallback(() => qc.invalidateQueries(), [qc])

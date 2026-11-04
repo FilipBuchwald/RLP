@@ -1,4 +1,4 @@
-// Rozgrywa całe wieczory samymi wywołaniami API (oba tryby, przycięcie, wyścigi, błędy).
+// Rozgrywa całe turnieje samymi wywołaniami API (oba tryby, przycięcie, wyścigi, błędy).
 // Użycie: npm run dev, potem npm run smoke. Zmienia LOKALNĄ bazę — na koniec przywróć: npm run seed
 import assert from 'node:assert/strict'
 import type {
@@ -119,7 +119,7 @@ async function main() {
   assert.equal(s.courts, 1, '2 korty przy 7 osobach → 1')
   assert.equal(s.rounds.length, 1)
   assert.equal(s.rounds[0].sitting.length, 3)
-  ok('bez limitu: wieczór utworzony, 1. runda wylosowana, korty zredukowane do 1')
+  ok('bez limitu: turniej utworzony, 1. runda wylosowana, korty zredukowane do 1')
 
   assert.equal(
     (
@@ -132,7 +132,7 @@ async function main() {
     ).status,
     409,
   )
-  ok('drugi wieczór na żywo → 409')
+  ok('drugi turniej na żywo → 409')
 
   assert.equal((await api('POST', `/sessions/${s.id}/rounds`)).status, 409)
   ok('następna runda bez kompletu wyników → 409')
@@ -159,7 +159,7 @@ async function main() {
   s = (await api<SessionDto>('POST', `/sessions/${s.id}/rounds`)).data
   assert.equal(s.rounds.length, 5)
   assert.equal((await api<SessionDto>('GET', '/sessions/live')).data!.id, s.id)
-  ok('4 rundy rozegrane, 5. wylosowana bez wyników; GET /sessions/live zwraca ten wieczór')
+  ok('4 rundy rozegrane, 5. wylosowana bez wyników; GET /sessions/live zwraca ten turniej')
 
   const unequal = await api<UnequalDto>('POST', `/sessions/${s.id}/finish`)
   assert.equal(unequal.status, 409)
@@ -189,9 +189,9 @@ async function main() {
   assert.equal((await api('PUT', `/matches/${m0.id}`, { scoreA: 10 })).status, 409)
   assert.equal((await api('DELETE', `/sessions/${s.id}`)).status, 409)
   assert.equal((await api('DELETE', `/sessions/${s.id}/rounds/4`)).status, 409)
-  ok('zakończony wieczór: wynik na żywo, odrzucenie i cofanie rundy → 409')
+  ok('zakończony turniej: wynik na żywo, odrzucenie i cofanie rundy → 409')
 
-  // --- poprawka wyniku w zapisanym wieczorze ---
+  // --- poprawka wyniku w zapisanym turnieju ---
   const newA = (m0.scoreA! + 5) % (fin.data.target + 1)
   const fixPath = `/sessions/${s.id}/scores`
   assert.equal(
@@ -214,7 +214,7 @@ async function main() {
   assert.equal(fixed.data.cap, unequal.data.min)
   for (const row of table([fixed.data])) assert.equal(row.matches, unequal.data.min)
   ok(
-    `poprawka w zapisanym wieczorze: ${m0.scoreA}:${m0.scoreB} → ${newA}:${m0after.scoreB}, przycięcie bez zmian; zły mecz / wynik → 400`,
+    `poprawka w zapisanym turnieju: ${m0.scoreA}:${m0.scoreB} → ${newA}:${m0after.scoreB}, przycięcie bez zmian; zły mecz / wynik → 400`,
   )
 
   // --- tryb „plan rund”: 6 graczy, 3 rundy; równoległe losowanie ---
@@ -235,7 +235,7 @@ async function main() {
     ).status,
     409,
   )
-  ok('plan: cofnięcie jedynej rundy → 409; poprawki trwającego wieczoru przez Historię → 409')
+  ok('plan: cofnięcie jedynej rundy → 409; poprawki trwającego turnieju przez Historię → 409')
   s = await scoreRound(plan.data)
   assert.equal(
     (await api('PUT', `/matches/${s.rounds[0].matches[0].id}`, { scoreA: 17 })).status,
@@ -262,7 +262,7 @@ async function main() {
   for (const row of table([planFin.data])) assert.equal(row.matches, 2)
   ok('plan: zakończony bez przycięcia, każdy po 2 mecze')
 
-  // --- odrzucenie i pusty wieczór ---
+  // --- odrzucenie i pusty turniej ---
   const d = await api<SessionDto>('POST', '/sessions', {
     playerIds: ids.slice(0, 4),
     targetPoints: 24,
@@ -279,14 +279,14 @@ async function main() {
   })
   assert.equal((await api('POST', `/sessions/${e.data.id}/finish`)).status, 204)
   assert.equal((await api('GET', '/sessions/live')).data, null)
-  ok('odrzucenie → 204; zakończenie bez rozegranej rundy → wieczór znika (204)')
+  ok('odrzucenie → 204; zakończenie bez rozegranej rundy → turniej znika (204)')
 
   // --- ranking, historia, profil, gość → stały ---
   const season = Number(fin.data.date.slice(0, 4))
   const hist = (await api<SessionDto[]>('GET', `/sessions?season=${season}`)).data
   assert.ok(hist.some((x) => x.id === fin.data.id && x.cap === unequal.data.min))
   assert.ok(hist.every((x, i) => i === 0 || hist[i - 1].date >= x.date))
-  ok(`historia ${season}: ${hist.length} wieczorów, od najnowszego, przycięty widoczny z cap`)
+  ok(`historia ${season}: ${hist.length} turniejów, od najnowszego, przycięty widoczny z cap`)
 
   const rk = (await api<RankingDto>('GET', `/ranking?season=${season}`)).data
   const avg = (await api<RankingDto>('GET', `/ranking?season=${season}&sort=avg`)).data
@@ -324,7 +324,7 @@ async function main() {
   assert.equal(dump.app, 'padel-liga')
   assert.equal(dump.players.length, (await api<PlayerDto[]>('GET', '/players')).data.length)
   assert.ok(dump.sessions.some((x) => x.id === fin.data.id && x.editedAt))
-  ok(`kopia JSON: ${dump.players.length} graczy, ${dump.sessions.length} wieczorów`)
+  ok(`kopia JSON: ${dump.players.length} graczy, ${dump.sessions.length} turniejów`)
 
   console.log('\nWszystko działa. Przywróć dane demo: npm run seed')
 }

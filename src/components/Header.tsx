@@ -5,9 +5,9 @@ export function Header({ season }: { season: number }) {
         <div className="ball" />
         <div>
           <div className="brand">
-            Padel <b>Liga</b>
+            Rybnicka Liga <b>Padologiczna</b>
           </div>
-          <div className="season">Sezon {season} · granie ze znajomymi</div>
+          <div className="season">Sezon {season}</div>
         </div>
       </div>
     </header>

@@ -51,7 +51,7 @@ export function FinishDialog({
       ) : (
         <p className="hint" style={{ margin: '12px 2px 14px' }}>
           Ktoś nie zagrał jeszcze ani jednego meczu — nie ma do czego przycinać. Zagrajcie dalej
-          albo odrzućcie wieczór.
+          albo odrzućcie turniej.
         </p>
       )}
       <div className="actions">

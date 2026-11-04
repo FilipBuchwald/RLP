@@ -12,7 +12,7 @@ import { keys, useCanWrite, useHistory, useInvalidateAll, usePlayerLookup } from
 const fmtEdited = (iso: string) =>
   new Date(iso).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })
 
-/** Poprawianie wyników zapisanego wieczoru: zmiany lokalnie, zapis jednym przyciskiem. */
+/** Poprawianie wyników zapisanego turnieju: zmiany lokalnie, zapis jednym przyciskiem. */
 function ScoreEditor({ s, onClose }: { s: SessionDto; onClose: () => void }) {
   const qc = useQueryClient()
   const toast = useToast()
@@ -128,7 +128,7 @@ function SessionItem({ s }: { s: SessionDto }) {
           <ScoreEditor s={s} onClose={() => setEditing(false)} />
         ) : (
           <>
-            <div className="rlabel">Wyniki wieczoru</div>
+            <div className="rlabel">Wyniki turnieju</div>
             <div className="small" style={{ margin: '4px 0 8px', lineHeight: 1.7 }}>
               {rows.map((r, i) => (
                 <span key={r.id}>
@@ -163,7 +163,7 @@ export function History() {
 
   return (
     <>
-      <h2>Historia wieczorów</h2>
+      <h2>Historia turniejów</h2>
       {isPending ? (
         <div className="loading">Wczytuję…</div>
       ) : isError ? (
@@ -171,7 +171,7 @@ export function History() {
       ) : data.length ? (
         data.map((s) => <SessionItem key={s.id} s={s} />)
       ) : (
-        <div className="empty">Brak wieczorów w sezonie {SEASON}.</div>
+        <div className="empty">Brak turniejów w sezonie {SEASON}.</div>
       )}
       <div style={{ marginTop: 18, textAlign: 'center' }}>
         <a className="btn ghost small muted" href={EXPORT_URL} download>

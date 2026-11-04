@@ -12,7 +12,7 @@ export function Ranking() {
   if (isPending) return <div className="loading">Wczytuję ranking…</div>
   if (isError) return <div className="empty">Nie udało się wczytać rankingu.</div>
   if (!data.regulars.length && !data.guests.length)
-    return <div className="empty">Brak rozegranych wieczorów w sezonie {SEASON}.</div>
+    return <div className="empty">Brak rozegranych turniejów w sezonie {SEASON}.</div>
 
   const regulars = sortRows(data.regulars, sort)
   const guests = sortRows(data.guests, sort)
@@ -22,7 +22,7 @@ export function Ranking() {
       <div className="strip" style={{ marginTop: 12 }}>
         <div className="stat">
           <div className="v">{data.totals.nights}</div>
-          <div className="k">wieczorów</div>
+          <div className="k">turniejów</div>
         </div>
         <div className="stat">
           <div className="v">{data.totals.matches}</div>

@@ -31,7 +31,7 @@ const session = (
   ...over,
 })
 
-/** Wieczór rozegrany „naprawdę”: losowanie z makeRound i losowe wyniki. */
+/** Turniej rozegrany „naprawdę”: losowanie z makeRound i losowe wyniki. */
 function played(players: string[], rounds: number, seed: number, over: Partial<SessionData> = {}) {
   const random = seededRandom(seed)
   const rs: Round[] = []
@@ -87,7 +87,7 @@ describe('table', () => {
     })
   })
 
-  it('sumuje wiele wieczorów i liczy wieczory', () => {
+  it('sumuje wiele turniejów i liczy turnieje', () => {
     const s1 = played(['a', 'b', 'c', 'd', 'e'], 5, 1, { id: 's1' })
     const s2 = played(['a', 'b', 'c', 'd'], 3, 2, { id: 's2' })
     const a = table([s1, s2]).find((r) => r.id === 'a')!
