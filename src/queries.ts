@@ -1,6 +1,6 @@
 // Dane z API przez TanStack Query: cache, odpytywanie turnieju na żywo, odświeżanie po zapisach.
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useMemo } from 'react'
+import { createContext, useCallback, useContext, useMemo } from 'react'
 import type { PlayerDto } from '../shared/dto'
 import { api } from './api'
 
@@ -38,13 +38,37 @@ export const usePlayerStats = (id: string | null, season: number) =>
     enabled: id != null,
   })
 
-const UNKNOWN: PlayerDto = { id: '?', name: '?', color: '#888888', isGuest: false }
+const UNKNOWN: PlayerDto = {
+  id: '?',
+  name: '?',
+  color: '#888888',
+  isGuest: false,
+  tournaments: 0,
+  variants: [],
+}
 
-/** Szybki dostęp do gracza po id (imię, kolor). */
+/**
+ * Wersje graczy w oglądanym turnieju (playerId → variantId). Wewnątrz turnieju gracz z wersją
+ * ma jej kolor, a `variant` to jej nazwa (np. „Orange”).
+ */
+export const VariantScope = createContext<Record<string, string> | null>(null)
+
+export type PlayerView = PlayerDto & { variant?: string }
+
+/** Szybki dostęp do gracza po id (imię, kolor; w turnieju — kolor wybranej wersji). */
 export function usePlayerLookup() {
   const { data } = usePlayers()
+  const scope = useContext(VariantScope)
   const map = useMemo(() => new Map((data ?? []).map((p) => [p.id, p])), [data])
-  return useCallback((id: string) => map.get(id) ?? { ...UNKNOWN, id }, [map])
+  return useCallback(
+    (id: string): PlayerView => {
+      const p = map.get(id) ?? { ...UNKNOWN, id }
+      const vId = scope?.[id]
+      const v = vId ? p.variants.find((x) => x.id === vId) : undefined
+      return v ? { ...p, color: v.color, variant: v.name } : p
+    },
+    [map, scope],
+  )
 }
 
 /** Po zakończeniu / odrzuceniu turnieju albo zmianie gracza odśwież wszystko, co od tego zależy. */

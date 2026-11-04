@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 
-export const ROUTES = ['ranking', 'gra', 'historia'] as const
+export const ROUTES = ['ranking', 'gra', 'historia', 'gracze'] as const
 export type Route = (typeof ROUTES)[number]
 
 function read(): Route {
@@ -13,7 +13,7 @@ function subscribe(cb: () => void) {
   return () => window.removeEventListener('hashchange', cb)
 }
 
-/** Prosty routing po #hash (#ranking / #gra / #historia), jak w prototypie. */
+/** Prosty routing po #hash (#ranking / #gra / #historia / #gracze), jak w prototypie. */
 export function useHashRoute(): Route {
   return useSyncExternalStore(subscribe, read)
 }

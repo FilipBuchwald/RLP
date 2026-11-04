@@ -1,5 +1,10 @@
 import type { PlayerStatsDto, RankingDto } from '../../shared/dto'
-import { playerProfile, ranking as computeRanking, type SortBy } from '../../shared/stats'
+import {
+  playerProfile,
+  ranking as computeRanking,
+  variantStats,
+  type SortBy,
+} from '../../shared/stats'
 import { currentSeason, getPlayer, listPlayers, loadSessions } from '../db'
 import { json, notFound, oneOf, seasonParam } from '../http'
 import type { Handler } from '../router'
@@ -52,6 +57,7 @@ export const playerStats: Handler = async ({ env, url, params }) => {
     season,
     player,
     profile: playerProfile(sessions, player.id, isGuest),
+    variants: player.variants.length ? variantStats(sessions, player.id) : [],
   }
   return json(body)
 }

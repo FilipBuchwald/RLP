@@ -38,6 +38,7 @@ const sql: string[] = [
   'DELETE FROM rounds;',
   'DELETE FROM session_players;',
   'DELETE FROM sessions;',
+  'DELETE FROM player_variants;',
   'DELETE FROM players;',
 ]
 
@@ -46,6 +47,15 @@ names.forEach((name, i) =>
     `INSERT INTO players (id, name, color, is_guest, created_at) VALUES (${q(pid(i))}, ${q(name)}, ${q(PLAYER_COLORS[i])}, ${i === GUEST ? 1 : 0}, ${q(`2026-10-01 18:00:0${i}`)});`,
   ),
 )
+
+// Kuba gra w różowej albo pomarańczowej koszulce — wersje „T-Mobile” i „Orange”.
+const KUBA = pid(1)
+sql.push(
+  `INSERT INTO player_variants (id, player_id, name, color) VALUES ('demo-v-tm', ${q(KUBA)}, 'T-Mobile', '#ff7ab6');`,
+  `INSERT INTO player_variants (id, player_id, name, color) VALUES ('demo-v-or', ${q(KUBA)}, 'Orange', '#ff9f5a');`,
+)
+// turniej → wersja Kuby (brak = bez wersji)
+const kubaVariant: Record<number, string> = { 0: 'demo-v-or', 1: 'demo-v-tm', 2: 'demo-v-or' }
 
 const random = seededRandom(2026)
 const TARGET = 24
@@ -76,7 +86,9 @@ nights.forEach((n, si) => {
     `INSERT INTO sessions (id, date, season, target_points, courts, mode, planned_rounds, cap, status, created_by, created_at) VALUES (${q(sid)}, ${q(n.date)}, 2026, ${TARGET}, ${n.courts}, ${q(n.plan ? 'plan' : 'open')}, ${n.plan ? n.rounds : 'NULL'}, ${q(cap)}, 'done', 'demo', ${q(`${n.date} 19:00:00`)});`,
   )
   for (const p of players)
-    sql.push(`INSERT INTO session_players (session_id, player_id) VALUES (${q(sid)}, ${q(p)});`)
+    sql.push(
+      `INSERT INTO session_players (session_id, player_id, variant_id) VALUES (${q(sid)}, ${q(p)}, ${q(p === KUBA ? (kubaVariant[si] ?? null) : null)});`,
+    )
   for (const r of rounds) {
     const rid = `${sid}-r${r.number}`
     sql.push(

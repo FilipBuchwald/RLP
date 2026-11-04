@@ -40,4 +40,6 @@ export interface SessionData {
   /** Przycięcie: każdemu liczą się tylko pierwsze `cap` meczów. null = brak. */
   cap: number | null
   rounds: Round[]
+  /** Wersja gracza w tym turnieju (playerId → variantId); brak wpisu = bez wersji. */
+  variants?: Record<PlayerId, string>
 }

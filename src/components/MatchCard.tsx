@@ -28,8 +28,15 @@ export function MatchCard({
     return (
       <div className={`side ${sc != null && other != null && sc > other ? 'win' : ''}`}>
         <div className="names">
-          <div>{player(team[0]).name}</div>
-          <div>{player(team[1]).name}</div>
+          {team.map((id) => {
+            const p = player(id)
+            return (
+              <div key={id}>
+                {p.name}
+                {p.variant && <span className="vtag"> · {p.variant}</span>}
+              </div>
+            )
+          })}
         </div>
         <div className="ctrl">
           {!readOnly && (

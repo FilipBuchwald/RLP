@@ -5,9 +5,17 @@ import type { SessionDto } from '../../shared/dto'
 import { EXPORT_URL, api, isCodeError } from '../api'
 import { MatchCard } from '../components/MatchCard'
 import { RoundsList } from '../components/RoundsList'
+import { VariantPicker } from '../components/VariantPicker'
 import { errorMessage, useToast } from '../context'
 import { SEASON, fmtDate, plural } from '../format'
-import { keys, useCanWrite, useHistory, useInvalidateAll, usePlayerLookup } from '../queries'
+import {
+  VariantScope,
+  keys,
+  useCanWrite,
+  useHistory,
+  useInvalidateAll,
+  usePlayerLookup,
+} from '../queries'
 
 const fmtEdited = (iso: string) =>
   new Date(iso).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })
@@ -71,6 +79,13 @@ function ScoreEditor({ s, onClose }: { s: SessionDto; onClose: () => void }) {
           })}
         </div>
       ))}
+      <VariantPicker
+        session={s}
+        title="Wersje graczy (zapis od razu)"
+        onSaved={async () => {
+          await invalidateAll()
+        }}
+      />
       <div className="actions">
         <button
           className="btn primary block"
@@ -100,61 +115,63 @@ function SessionItem({ s }: { s: SessionDto }) {
   const matches = s.rounds.reduce((n, r) => n + r.matches.length, 0)
 
   return (
-    <details className="ses">
-      <summary>
-        <div>
-          <div className="sd">{fmtDate(s.date)}</div>
-          <div className="winner">
-            {top && (
-              <>
-                Wygrał(a) <b>{player(top.id).name}</b> · {top.points} pkt ·{' '}
-              </>
-            )}
-            {s.players.length} graczy · {matches} {plural(matches, 'mecz', 'mecze', 'meczów')}
+    <VariantScope.Provider value={s.variants}>
+      <details className="ses">
+        <summary>
+          <div>
+            <div className="sd">{fmtDate(s.date)}</div>
+            <div className="winner">
+              {top && (
+                <>
+                  Wygrał(a) <b>{player(top.id).name}</b> · {top.points} pkt ·{' '}
+                </>
+              )}
+              {s.players.length} graczy · {matches} {plural(matches, 'mecz', 'mecze', 'meczów')}
+            </div>
+            {s.cap ? (
+              <div className="tag">
+                ✂️ przycięte do {s.cap} {plural(s.cap, 'meczu', 'meczów', 'meczów')} na osobę
+              </div>
+            ) : s.plannedRounds ? (
+              <div className="tag ok">🎯 plan {s.plannedRounds} rund</div>
+            ) : null}
+            {s.editedAt && <div className="tag">✏️ poprawiony {fmtEdited(s.editedAt)}</div>}
           </div>
-          {s.cap ? (
-            <div className="tag">
-              ✂️ przycięte do {s.cap} {plural(s.cap, 'meczu', 'meczów', 'meczów')} na osobę
-            </div>
-          ) : s.plannedRounds ? (
-            <div className="tag ok">🎯 plan {s.plannedRounds} rund</div>
-          ) : null}
-          {s.editedAt && <div className="tag">✏️ poprawiony {fmtEdited(s.editedAt)}</div>}
+          <span className="chev">›</span>
+        </summary>
+        <div className="body prev">
+          {editing ? (
+            <ScoreEditor s={s} onClose={() => setEditing(false)} />
+          ) : (
+            <>
+              <div className="rlabel">Wyniki turnieju</div>
+              <div className="small" style={{ margin: '4px 0 8px', lineHeight: 1.7 }}>
+                {rows.map((r, i) => (
+                  <span key={r.id}>
+                    {i > 0 && '  ·  '}
+                    {i + 1}. {player(r.id).name} <b className="num">{r.points}</b>
+                  </span>
+                ))}
+              </div>
+              {s.cap != null && (
+                <div className="small muted" style={{ marginBottom: 6 }}>
+                  <s className="cut">Przekreślony</s> = mecz nieliczony dla tego gracza (przycięcie
+                  do równej liczby).
+                </div>
+              )}
+              <RoundsList session={s} rounds={s.rounds} />
+              {canWrite && (
+                <div style={{ marginTop: 12, textAlign: 'center' }}>
+                  <button className="btn ghost small muted" onClick={() => setEditing(true)}>
+                    ✏️ Popraw wynik
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
-        <span className="chev">›</span>
-      </summary>
-      <div className="body prev">
-        {editing ? (
-          <ScoreEditor s={s} onClose={() => setEditing(false)} />
-        ) : (
-          <>
-            <div className="rlabel">Wyniki turnieju</div>
-            <div className="small" style={{ margin: '4px 0 8px', lineHeight: 1.7 }}>
-              {rows.map((r, i) => (
-                <span key={r.id}>
-                  {i > 0 && '  ·  '}
-                  {i + 1}. {player(r.id).name} <b className="num">{r.points}</b>
-                </span>
-              ))}
-            </div>
-            {s.cap != null && (
-              <div className="small muted" style={{ marginBottom: 6 }}>
-                <s className="cut">Przekreślony</s> = mecz nieliczony dla tego gracza (przycięcie do
-                równej liczby).
-              </div>
-            )}
-            <RoundsList session={s} rounds={s.rounds} />
-            {canWrite && (
-              <div style={{ marginTop: 12, textAlign: 'center' }}>
-                <button className="btn ghost small muted" onClick={() => setEditing(true)}>
-                  ✏️ Popraw wynik
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </details>
+      </details>
+    </VariantScope.Provider>
   )
 }
 

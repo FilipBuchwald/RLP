@@ -157,7 +157,11 @@ Zasada: w danym momencie może być maksymalnie jeden wieczór ze `status = 'liv
 | GET | `/api/players` | Lista graczy |
 | POST | `/api/players` | Dodaj gracza `{ name, isGuest? }`, kolor przydzielany automatycznie |
 | PATCH | `/api/players/:id` | Zmiana `{ name?, color?, isGuest? }` (np. gość → stały) |
-| POST | `/api/sessions` | Nowy wieczór `{ playerIds, targetPoints, courts, mode, plannedRounds? }` → tworzy i losuje 1. rundę |
+| DELETE | `/api/players/:id` | Usuń gracza — tylko bez żadnego turnieju (inaczej 409) |
+| POST | `/api/players/:id/variants` | Dodaj wersję gracza `{ name, color }` (np. koszulka „Orange”) |
+| PATCH / DELETE | `/api/players/:id/variants/:variantId` | Zmień wersję `{ name?, color? }` / usuń (tylko taką, która nie grała) |
+| PUT | `/api/sessions/:id/players/:playerId/variant` | Wersja gracza w turnieju `{ variantId \| null }` (na żywo i po fakcie) |
+| POST | `/api/sessions` | Nowy turniej `{ playerIds, targetPoints, courts, mode, plannedRounds?, variants? }` → tworzy i losuje 1. rundę |
 | GET | `/api/sessions/live` | Bieżący wieczór z rundami i meczami (polling) |
 | PUT | `/api/matches/:id` | Zapis wyniku `{ scoreA }` → serwer ustawia `scoreB = target − scoreA` |
 | POST | `/api/sessions/:id/rounds` | Losuj następną rundę; błąd, jeśli bieżąca nie ma kompletu wyników lub plan się skończył |
@@ -240,6 +244,10 @@ Pracuj etapami; po każdym etapie zatrzymaj się, pokaż wynik i poczekaj na akc
 - [x] Edycja wyniku w zapisanym wieczorze (Historia → „Popraw wynik”, znacznik „poprawiony”)
 - [x] Cofnięcie ostatniej rundy w trakcie gry
 - [x] Eksport / kopia zapasowa bazy (JSON z aplikacji, `npm run backup` → SQL)
+
+### Etap 7. Gracze i wersje
+- [x] Zakładka Gracze: dodawanie, zmiana imienia i koloru, gość ↔ stały, usuwanie gracza bez turniejów
+- [x] Wersje gracza (np. koszulki): wybór na cały turniej, kolor wersji w turnieju, porównanie w profilu
 
 ### Później (nie teraz)
 - Wariant Mexicano, własna domena, wykresy formy, porównanie dwóch graczy, archiwum sezonów

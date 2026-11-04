@@ -55,7 +55,32 @@ export const history: Handler = async ({ env, url }) => {
   return json(sessions.reverse())
 }
 
-// POST /api/sessions { playerIds, targetPoints, courts, mode, plannedRounds? }
+/** Sprawdza `{ playerId: variantId }`: gracz w składzie, wersja należy do tego gracza. */
+async function readVariants(
+  db: D1Database,
+  raw: unknown,
+  playerIds: string[],
+): Promise<Record<string, string>> {
+  if (raw === undefined || raw === null) return {}
+  if (typeof raw !== 'object' || Array.isArray(raw))
+    throw badRequest('Pole variants: { playerId: variantId }')
+  const entries = Object.entries(raw as Record<string, unknown>).filter(([, v]) => v != null)
+  if (!entries.length) return {}
+  if (entries.some(([p, v]) => !playerIds.includes(p) || typeof v !== 'string'))
+    throw badRequest('Pole variants: gracz spoza składu')
+  const { results } = await db
+    .prepare(
+      `SELECT id, player_id FROM player_variants WHERE id IN (${entries.map(() => '?').join(',')})`,
+    )
+    .bind(...entries.map(([, v]) => v))
+    .all<{ id: string; player_id: string }>()
+  const owner = new Map(results.map((r) => [r.id, r.player_id]))
+  for (const [p, v] of entries)
+    if (owner.get(v as string) !== p) throw badRequest('Wersja nie należy do tego gracza')
+  return Object.fromEntries(entries) as Record<string, string>
+}
+
+// POST /api/sessions { playerIds, targetPoints, courts, mode, plannedRounds?, variants? }
 // Tworzy turniej i od razu losuje 1. rundę — wszystko w jednym batchu (atomowo).
 export const create: Handler = async ({ request, env, user }) => {
   const body = await readBody(request)
@@ -84,6 +109,7 @@ export const create: Handler = async ({ request, env, user }) => {
     .bind(...playerIds)
     .all<{ id: string }>()
   if (known.length !== playerIds.length) throw badRequest('Nieznany gracz na liście')
+  const variants = await readVariants(env.DB, body.variants, playerIds)
 
   if (await loadLiveSession(env.DB))
     throw conflict('Trwa już inny turniej — zakończ go albo odrzuć')
@@ -100,7 +126,11 @@ export const create: Handler = async ({ request, env, user }) => {
         )
         .bind(id, date, Number(date.slice(0, 4)), target, courts, mode, plannedRounds, user),
       ...playerIds.map((p) =>
-        db.prepare('INSERT INTO session_players (session_id, player_id) VALUES (?, ?)').bind(id, p),
+        db
+          .prepare(
+            'INSERT INTO session_players (session_id, player_id, variant_id) VALUES (?, ?, ?)',
+          )
+          .bind(id, p, variants[p] ?? null),
       ),
       ...insertRound(db, id, makeRound(playerIds, [], courts)),
     ])
@@ -189,6 +219,30 @@ export const editScores: Handler = async ({ request, env, params }) => {
     db
       .prepare("UPDATE sessions SET edited_at = datetime('now') WHERE id = ? AND status = 'done'")
       .bind(s.id),
+  ])
+  return reload(db, s.id)
+}
+
+// PUT /api/sessions/:id/players/:playerId/variant { variantId | null }
+// Zmiana wersji gracza w turnieju (zapomnieliście wybrać na starcie / poprawka w Historii).
+export const setVariant: Handler = async ({ request, env, params }) => {
+  const s = await loadSession(env.DB, params.id!)
+  if (!s) throw notFound('Nie ma takiego turnieju')
+  const playerId = params.playerId!
+  if (!s.players.includes(playerId)) throw notFound('Ten gracz nie gra w tym turnieju')
+  const body = await readBody(request)
+  if (body.variantId !== null && typeof body.variantId !== 'string')
+    throw badRequest('Pole variantId: identyfikator wersji albo null')
+  const v = await readVariants(env.DB, { [playerId]: body.variantId }, s.players)
+
+  const db = env.DB
+  await db.batch([
+    db
+      .prepare('UPDATE session_players SET variant_id = ? WHERE session_id = ? AND player_id = ?')
+      .bind(v[playerId] ?? null, s.id, playerId),
+    ...(s.status === 'done'
+      ? [db.prepare("UPDATE sessions SET edited_at = datetime('now') WHERE id = ?").bind(s.id)]
+      : []),
   ])
   return reload(db, s.id)
 }

@@ -883,6 +883,104 @@ s.cut {
   opacity: 0.35;
   cursor: not-allowed;
 }
+/* gracze */
+.plist {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.prow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.prow:first-child {
+  border-top: 0;
+}
+.prow .pmain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+}
+.prow .pn {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.prow .pn b {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.prow .btn {
+  padding: 7px 12px;
+  font-size: 13px;
+}
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  box-shadow: 0 0 0 1px var(--line);
+}
+.swatch.on {
+  border-color: var(--bg, #0b1120);
+  box-shadow: 0 0 0 2px var(--tx);
+}
+/* wersje gracza */
+.vtag {
+  color: var(--mu);
+  font-weight: 500;
+  font-size: 0.85em;
+}
+.vseg {
+  flex-wrap: wrap;
+}
+.vseg button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.vdot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.variants-pick {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.variants-pick .opt,
+.card .opt {
+  gap: 10px;
+}
+.vform {
+  display: grid;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.vform:first-child {
+  border-top: 0;
+}
+.tr.vcmp {
+  grid-template-columns: 1fr 34px 46px 46px 64px;
+}
 a.btn {
   display: inline-block;
   color: inherit;

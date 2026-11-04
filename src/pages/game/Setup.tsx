@@ -9,6 +9,7 @@ import {
 } from '../../../shared/americano'
 import type { SessionMode } from '../../../shared/dto'
 import { api, isCodeError } from '../../api'
+import { VariantSeg } from '../../components/VariantPicker'
 import { errorMessage, useToast } from '../../context'
 import { fmtDuration, plural } from '../../format'
 import { keys, usePlayers } from '../../queries'
@@ -20,8 +21,17 @@ type SetupState = {
   courts: number
   mode: SessionMode | null
   rounds: number | null
+  /** Wybrane wersje (playerId → variantId); brak = bez wersji. */
+  variants?: Record<string, string>
 }
-const INITIAL: SetupState = { sel: [], target: 24, courts: 1, mode: null, rounds: null }
+const INITIAL: SetupState = {
+  sel: [],
+  target: 24,
+  courts: 1,
+  mode: null,
+  rounds: null,
+  variants: {},
+}
 export const SETUP_KEY = 'padel-setup'
 
 export function Setup() {
@@ -47,6 +57,21 @@ export function Setup() {
   const ready = n >= 4 && st.mode != null && (st.mode === 'open' || rounds != null)
 
   const update = (patch: Partial<SetupState>) => setSt((s) => ({ ...s, ...patch }))
+
+  // Wersje tylko dla zaznaczonych graczy i tylko takie, które nadal istnieją.
+  const withVariants = players.filter((p) => p.variants.length > 0 && sel.includes(p.id))
+  const variants: Record<string, string> = {}
+  for (const p of withVariants) {
+    const v = st.variants?.[p.id]
+    if (v && p.variants.some((x) => x.id === v)) variants[p.id] = v
+  }
+  const setVariant = (playerId: string, variantId: string | null) =>
+    setSt((s) => {
+      const next = { ...s.variants }
+      if (variantId) next[playerId] = variantId
+      else delete next[playerId]
+      return { ...s, variants: next }
+    })
   const toggle = (id: string) =>
     update({ sel: sel.includes(id) ? sel.filter((x) => x !== id) : [...sel, id] })
 
@@ -81,6 +106,7 @@ export function Setup() {
         courts,
         mode: st.mode!,
         plannedRounds: st.mode === 'plan' ? rounds! : undefined,
+        variants,
       })
       qc.setQueryData(keys.live, session)
       window.scrollTo({ top: 0 })
@@ -128,6 +154,21 @@ export function Setup() {
                 </button>
               )
             })}
+          </div>
+        )}
+        {withVariants.length > 0 && (
+          <div className="variants-pick">
+            <div className="muted small">W jakiej wersji dziś gra?</div>
+            {withVariants.map((p) => (
+              <div className="opt" key={p.id}>
+                <b>{p.name}</b>
+                <VariantSeg
+                  variants={p.variants}
+                  value={variants[p.id] ?? null}
+                  onChange={(v) => setVariant(p.id, v)}
+                />
+              </div>
+            ))}
           </div>
         )}
         <form className="row" style={{ marginTop: 12 }} onSubmit={addPlayer}>

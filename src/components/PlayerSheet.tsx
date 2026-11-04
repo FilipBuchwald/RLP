@@ -1,10 +1,63 @@
 import { useState } from 'react'
+import { MIN_VARIANT_MATCHES } from '../../shared/stats'
+import type { PlayerStatsDto } from '../../shared/dto'
 import { api } from '../api'
 import { errorMessage, useToast } from '../context'
 import { SEASON } from '../format'
 import { useCanWrite, useInvalidateAll, usePlayerLookup, usePlayerStats } from '../queries'
 import { Dot } from './Dot'
 import { CloseButton, Sheet } from './Sheet'
+
+/** „Która wersja gra lepiej” — porównanie po średniej punktów na mecz. */
+function VariantCompare({ data }: { data: PlayerStatsDto }) {
+  const rows = data.variants
+    .filter((r) => r.matches > 0)
+    .map((r) => {
+      const v = data.player.variants.find((x) => x.id === r.variantId)
+      return { ...r, name: v?.name ?? 'bez wersji', color: v?.color ?? 'var(--line)' }
+    })
+    .sort((a, b) => b.avg - a.avg || b.winRate - a.winRate)
+  if (!rows.length) return null
+  const fewMatches = rows.some((r) => r.matches < MIN_VARIANT_MATCHES)
+  const best = rows.length > 1 && !fewMatches ? rows[0] : null
+
+  return (
+    <>
+      <h2>Która wersja gra lepiej</h2>
+      <div className="tbl">
+        <div className="tr th vcmp">
+          <div>Wersja</div>
+          <div className="c">M</div>
+          <div className="c">Śr.</div>
+          <div className="c">Wyg.</div>
+          <div className="c">W–R–P</div>
+        </div>
+        {rows.map((r) => (
+          <div className="tr vcmp" key={r.variantId ?? 'none'} style={{ cursor: 'default' }}>
+            <div className="who">
+              <i className="dot" style={{ background: r.color }} />
+              <span>
+                {r.name}
+                {best === r && ' 👑'}
+              </span>
+            </div>
+            <div className="c num muted">{r.matches}</div>
+            <div className="c num hl">{r.avg.toFixed(1)}</div>
+            <div className="c num">{Math.round(r.winRate * 100)}%</div>
+            <div className="c num muted">
+              {r.wins}–{r.draws}–{r.losses}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="muted small" style={{ marginTop: 6 }}>
+        {fewMatches
+          ? `Za mało meczów, żeby wyrokować (min. ${MIN_VARIANT_MATCHES} na wersję) — grajcie dalej.`
+          : 'Śr. = punkty na mecz. Liczą się te same mecze co w rankingu.'}
+      </div>
+    </>
+  )
+}
 
 /** Profil gracza w panelu od dołu. */
 export function PlayerSheet({ id, onClose }: { id: string; onClose: () => void }) {
@@ -113,6 +166,8 @@ export function PlayerSheet({ id, onClose }: { id: string; onClose: () => void }
           </div>
         </>
       )}
+
+      {data && data.variants.length > 0 && <VariantCompare data={data} />}
 
       {data && canWrite && (
         <div style={{ marginTop: 14, textAlign: 'center' }}>

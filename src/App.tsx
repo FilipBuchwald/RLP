@@ -6,6 +6,7 @@ import { PlayerSheetContext, ToastContext } from './context'
 import { SEASON } from './format'
 import { Game } from './pages/Game'
 import { History } from './pages/History'
+import { Players } from './pages/Players'
 import { Ranking } from './pages/Ranking'
 import { useLive } from './queries'
 import { useHashRoute } from './useHashRoute'
@@ -34,6 +35,7 @@ export default function App() {
           {route === 'ranking' && <Ranking />}
           {route === 'gra' && <Game />}
           {route === 'historia' && <History />}
+          {route === 'gracze' && <Players />}
         </main>
         <Tabs current={route} live={!!live} />
         {playerId && <PlayerSheet id={playerId} onClose={closePlayer} />}

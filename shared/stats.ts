@@ -134,6 +134,30 @@ export function table(sessions: readonly SessionData[]): StatsRow[] {
   }))
 }
 
+/** Wiersz porównania wersji jednego gracza; `variantId` null = turnieje bez wersji. */
+export interface VariantStatsRow extends Omit<StatsRow, 'id'> {
+  variantId: string | null
+}
+
+/** Ile meczów to za mało, żeby porównywać wersje (pokazujemy dopisek). */
+export const MIN_VARIANT_MATCHES = 5
+
+/** Wyniki gracza w podziale na wersje (z tych samych policzonych meczów co ranking). */
+export function variantStats(sessions: readonly SessionData[], id: PlayerId): VariantStatsRow[] {
+  const groups = new Map<string | null, SessionData[]>()
+  for (const s of sessions) {
+    if (!s.players.includes(id)) continue
+    const key = s.variants?.[id] ?? null
+    groups.set(key, [...(groups.get(key) ?? []), s])
+  }
+  return [...groups].map(([variantId, list]) => {
+    const row = table(list).find((r) => r.id === id)!
+    const { id: _id, ...rest } = row
+    void _id
+    return { variantId, ...rest }
+  })
+}
+
 export type SortBy = 'points' | 'avg'
 
 export function sortRows(rows: readonly StatsRow[], by: SortBy = 'points'): StatsRow[] {

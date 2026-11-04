@@ -3,13 +3,14 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { nextEqualRound, stepFor } from '../../../shared/americano'
 import type { MatchDto, SessionDto, UnequalDto } from '../../../shared/dto'
 import { MatchCard } from '../../components/MatchCard'
+import { VariantPicker } from '../../components/VariantPicker'
 import { matchCounts, sortRows, table } from '../../../shared/stats'
 import { ApiError, api, isCodeError, isUnequal } from '../../api'
 import { errorMessage, useToast } from '../../context'
 import { RoundsList } from '../../components/RoundsList'
 import { StatsTable } from '../../components/StatsTable'
 import { fmtDate, plural } from '../../format'
-import { keys, useInvalidateAll, usePlayerLookup } from '../../queries'
+import { VariantScope, keys, useInvalidateAll, usePlayerLookup } from '../../queries'
 import { FinishDialog } from './FinishDialog'
 import { SETUP_KEY } from './Setup'
 
@@ -255,7 +256,7 @@ export function Live({
   const prev = view.rounds.slice(0, -1).reverse()
 
   return (
-    <>
+    <VariantScope.Provider value={s.variants}>
       <div className="livehead">
         <div>
           <div className="muted small">
@@ -337,6 +338,15 @@ export function Live({
       <h2>Tabela turnieju</h2>
       <StatsTable rows={sortRows(table([view]))} compact />
 
+      {!readOnly && (
+        <VariantPicker
+          session={s}
+          onSaved={(next) => {
+            qc.setQueryData(keys.live, next)
+          }}
+        />
+      )}
+
       {prev.length > 0 && (
         <>
           <h2>Poprzednie rundy</h2>
@@ -366,6 +376,6 @@ export function Live({
           onClose={() => setUnequal(null)}
         />
       )}
-    </>
+    </VariantScope.Provider>
   )
 }

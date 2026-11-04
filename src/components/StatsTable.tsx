@@ -38,7 +38,10 @@ export function StatsTable({ rows, highlight = 'points', compact }: Props) {
           <div className="pos">{i + 1}</div>
           <div className="who">
             <Dot id={r.id} />
-            <span>{player(r.id).name}</span>
+            <span>
+              {player(r.id).name}
+              {player(r.id).variant && <span className="vtag"> · {player(r.id).variant}</span>}
+            </span>
           </div>
           <div className={`c num ${highlight === 'points' ? 'hl' : ''}`}>{r.points}</div>
           <div className={`c num ${highlight === 'avg' ? 'hl' : ''}`}>{r.avg.toFixed(1)}</div>

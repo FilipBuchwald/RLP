@@ -59,6 +59,23 @@ async function main() {
   assert.equal(bad.status, 400)
   ok('gracze: duplikat imienia (bez względu na wielkość liter) → 409, puste imię → 400')
 
+  const tmp = await api<PlayerDto>('POST', '/players', { name: 'Tymczasowy Smoke' })
+  assert.equal(tmp.status, 201)
+  assert.equal(tmp.data.tournaments, 0)
+  const renamed = await api<PlayerDto>('PATCH', `/players/${tmp.data.id}`, {
+    name: 'Tymczas',
+    color: '#4F8CFF',
+  })
+  assert.equal(renamed.data.name, 'Tymczas')
+  assert.equal(renamed.data.color, '#4f8cff')
+  assert.equal((await api('DELETE', `/players/${tmp.data.id}`)).status, 204)
+  assert.equal((await api('DELETE', `/players/${tmp.data.id}`)).status, 404)
+  const veteran = players.find((p) => p.tournaments > 0)!
+  assert.equal((await api('DELETE', `/players/${veteran.id}`)).status, 409)
+  ok(
+    `gracze: zmiana imienia i koloru; usunięcie bez turniejów → 204, ${veteran.name} (${veteran.tournaments} turn.) → 409`,
+  )
+
   // --- walidacja tworzenia ---
   assert.equal(
     (
@@ -261,6 +278,70 @@ async function main() {
   assert.equal(planFin.data.cap, null)
   for (const row of table([planFin.data])) assert.equal(row.matches, 2)
   ok('plan: zakończony bez przycięcia, każdy po 2 mecze')
+
+  // --- wersje gracza (np. koszulki) ---
+  const vp = ids[0]
+  const withA = await api<PlayerDto>('POST', `/players/${vp}/variants`, {
+    name: 'Smoke A',
+    color: '#ff9f5a',
+  })
+  assert.equal(withA.status, 201)
+  const vA = withA.data.variants.find((v) => v.name === 'Smoke A')!
+  const vB = (
+    await api<PlayerDto>('POST', `/players/${vp}/variants`, { name: 'Smoke B', color: '#ff7ab6' })
+  ).data.variants.find((v) => v.name === 'Smoke B')!
+  assert.equal(
+    (await api('POST', `/players/${vp}/variants`, { name: 'smoke a', color: '#ff9f5a' })).status,
+    409,
+  )
+  assert.equal(
+    (await api('PATCH', `/players/${vp}/variants/${vB.id}`, { name: 'Smoke A' })).status,
+    409,
+  )
+  assert.equal(
+    (
+      await api('POST', '/sessions', {
+        playerIds: ids.slice(0, 4),
+        targetPoints: 24,
+        courts: 1,
+        mode: 'open',
+        variants: { [ids[1]]: vA.id },
+      })
+    ).status,
+    400,
+  )
+  const vs = await api<SessionDto>('POST', '/sessions', {
+    playerIds: ids.slice(0, 4),
+    targetPoints: 24,
+    courts: 1,
+    mode: 'open',
+    variants: { [vp]: vA.id },
+  })
+  assert.equal(vs.status, 201)
+  assert.deepEqual(vs.data.variants, { [vp]: vA.id })
+  const toB = await api<SessionDto>('PUT', `/sessions/${vs.data.id}/players/${vp}/variant`, {
+    variantId: vB.id,
+  })
+  assert.deepEqual(toB.data.variants, { [vp]: vB.id })
+  assert.equal(
+    (
+      await api('PUT', `/sessions/${vs.data.id}/players/${ids[1]}/variant`, {
+        variantId: vB.id,
+      })
+    ).status,
+    400,
+  )
+  assert.equal((await api('DELETE', `/players/${vp}/variants/${vB.id}`)).status, 409)
+  const none = await api<SessionDto>('PUT', `/sessions/${vs.data.id}/players/${vp}/variant`, {
+    variantId: null,
+  })
+  assert.deepEqual(none.data.variants, {})
+  assert.equal((await api('DELETE', `/sessions/${vs.data.id}`)).status, 204)
+  assert.equal((await api('DELETE', `/players/${vp}/variants/${vA.id}`)).status, 200)
+  assert.equal((await api('DELETE', `/players/${vp}/variants/${vB.id}`)).status, 200)
+  ok(
+    'wersje: dodanie, duplikat → 409, wybór przy starcie i zmiana w trakcie, cudza wersja → 400, używana → 409',
+  )
 
   // --- odrzucenie i pusty turniej ---
   const d = await api<SessionDto>('POST', '/sessions', {

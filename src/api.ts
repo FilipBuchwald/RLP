@@ -4,6 +4,7 @@ import type {
   MeDto,
   CreateSessionBody,
   ScoresBody,
+  VariantBody,
   PlayerDto,
   PlayerStatsDto,
   RankingDto,
@@ -94,6 +95,13 @@ export const api = {
   createPlayer: (body: CreatePlayerBody) => request<PlayerDto>('POST', '/players', body),
   updatePlayer: (id: string, body: UpdatePlayerBody) =>
     request<PlayerDto>('PATCH', `/players/${id}`, body),
+  deletePlayer: (id: string) => request<null>('DELETE', `/players/${id}`),
+  createVariant: (playerId: string, body: Required<VariantBody>) =>
+    request<PlayerDto>('POST', `/players/${playerId}/variants`, body),
+  updateVariant: (playerId: string, variantId: string, body: VariantBody) =>
+    request<PlayerDto>('PATCH', `/players/${playerId}/variants/${variantId}`, body),
+  deleteVariant: (playerId: string, variantId: string) =>
+    request<PlayerDto>('DELETE', `/players/${playerId}/variants/${variantId}`),
   playerStats: (id: string, season: number) =>
     request<PlayerStatsDto>('GET', `/players/${id}/stats?season=${season}`),
 
@@ -113,6 +121,11 @@ export const api = {
   /** Cofa ostatnią rundę turnieju na żywo; `number` = numer tej rundy (chroni przed podwójnym cofnięciem). */
   undoRound: (id: string, number: number) =>
     request<SessionDto>('DELETE', `/sessions/${id}/rounds/${number}`),
+  /** Wersja gracza w turnieju (na żywo albo poprawka w Historii); null = bez wersji. */
+  setVariant: (sessionId: string, playerId: string, variantId: string | null) =>
+    request<SessionDto>('PUT', `/sessions/${sessionId}/players/${playerId}/variant`, {
+      variantId,
+    }),
   /** Poprawki wyników w zapisanym turnieju — wszystkie naraz. */
   editScores: (id: string, scores: ScoresBody['scores']) =>
     request<SessionDto>('PUT', `/sessions/${id}/scores`, { scores } satisfies ScoresBody),

@@ -9,6 +9,7 @@ import {
   ranking,
   sortRows,
   table,
+  variantStats,
 } from './stats'
 import type { Match, Pair, Round, SessionData } from './types'
 
@@ -232,5 +233,65 @@ describe('ranking i profil', () => {
 
   it('nieznany gracz → null', () => {
     expect(playerProfile([s1], 'zzz', isGuest)).toBeNull()
+  })
+})
+
+describe('variantStats (wersje gracza)', () => {
+  const P = ['a', 'b', 'c', 'd']
+  const one = (id: string, scoreA: number, variants?: Record<string, string>) =>
+    session({
+      id,
+      players: P,
+      rounds: [{ number: 1, sitting: [], matches: [m(1, ['a', 'b'], ['c', 'd'], scoreA)] }],
+      variants,
+    })
+
+  it('dzieli wyniki gracza na wersje i „bez wersji”', () => {
+    const rows = variantStats(
+      [
+        one('s1', 20, { a: 'orange' }),
+        one('s2', 10, { a: 'orange' }),
+        one('s3', 4, { a: 'tm' }),
+        one('s4', 12),
+      ],
+      'a',
+    )
+    const by = Object.fromEntries(rows.map((r) => [String(r.variantId), r]))
+    expect(by.orange).toMatchObject({
+      nights: 2,
+      matches: 2,
+      points: 30,
+      wins: 1,
+      losses: 1,
+      avg: 15,
+    })
+    expect(by.tm).toMatchObject({ nights: 1, matches: 1, points: 4, losses: 1 })
+    expect(by.null).toMatchObject({ nights: 1, matches: 1, points: 12, draws: 1 })
+  })
+
+  it('pomija turnieje bez gracza; wersja innego gracza nie wpływa', () => {
+    const other = session({
+      id: 'x',
+      players: ['b', 'c', 'd', 'e'],
+      rounds: [{ number: 1, sitting: [], matches: [m(1, ['b', 'c'], ['d', 'e'], 12)] }],
+    })
+    const rows = variantStats([other, one('s1', 18, { b: 'v1' })], 'a')
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ variantId: null, matches: 1, points: 18 })
+  })
+
+  it('suma po wersjach = wiersz gracza w rankingu (te same policzone mecze, także z przycięciem)', () => {
+    const players = ['a', 'b', 'c', 'd', 'e']
+    const ss = [1, 2, 3].map((seed, i) =>
+      played(players, 4, seed, {
+        id: `t${i}`,
+        cap: 3,
+        variants: i === 1 ? {} : { a: `v${i % 2}` },
+      }),
+    )
+    const rows = variantStats(ss, 'a')
+    const total = table(ss).find((r) => r.id === 'a')!
+    expect(rows.reduce((n, r) => n + r.points, 0)).toBe(total.points)
+    expect(rows.reduce((n, r) => n + r.matches, 0)).toBe(total.matches)
   })
 })
