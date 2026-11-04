@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { nextEqualRound, stepFor } from '../../../shared/americano'
 import type { MatchDto, SessionDto, UnequalDto } from '../../../shared/dto'
 import { matchCounts, sortRows, table } from '../../../shared/stats'
-import { ApiError, api, isUnequal } from '../../api'
+import { ApiError, api, isCodeError, isUnequal } from '../../api'
 import { errorMessage, useToast } from '../../context'
 import { RoundsList } from '../../components/RoundsList'
 import { StatsTable } from '../../components/StatsTable'
@@ -102,11 +102,13 @@ function MatchCard({
   target,
   scoreA,
   onScore,
+  readOnly,
 }: {
   match: MatchDto
   target: number
   scoreA: number | null
   onScore: (side: 'a' | 'b', delta: number) => void
+  readOnly?: boolean
 }) {
   const player = usePlayerLookup()
   const scoreB = scoreA == null ? null : target - scoreA
@@ -122,13 +124,17 @@ function MatchCard({
           <div>{player(team[1]).name}</div>
         </div>
         <div className="ctrl">
-          <button onClick={() => onScore(s, -1)} aria-label="minus">
-            −
-          </button>
+          {!readOnly && (
+            <button onClick={() => onScore(s, -1)} aria-label="minus">
+              −
+            </button>
+          )}
           <div className="sc">{sc ?? '–'}</div>
-          <button onClick={() => onScore(s, 1)} aria-label="plus">
-            +
-          </button>
+          {!readOnly && (
+            <button onClick={() => onScore(s, 1)} aria-label="plus">
+              +
+            </button>
+          )}
         </div>
       </div>
     )
@@ -138,7 +144,9 @@ function MatchCard({
     <div className={`match ${scoreA != null ? 'done' : ''}`}>
       <div className="court">
         <span>Kort {match.court}</span>
-        <span>{scoreA != null ? `suma ${target}/${target}` : 'wpisz wynik'}</span>
+        <span>
+          {scoreA != null ? `suma ${target}/${target}` : readOnly ? 'gra trwa' : 'wpisz wynik'}
+        </span>
       </div>
       {side('a')}
       {side('b')}
@@ -146,7 +154,16 @@ function MatchCard({
   )
 }
 
-export function Live({ session: s }: { session: SessionDto }) {
+export function Live({
+  session: s,
+  readOnly = false,
+  footer,
+}: {
+  session: SessionDto
+  /** Podgląd bez prawa zapisu (brak kodu grupy). */
+  readOnly?: boolean
+  footer?: ReactNode
+}) {
   const qc = useQueryClient()
   const toast = useToast()
   const invalidateAll = useInvalidateAll()
@@ -195,6 +212,7 @@ export function Live({ session: s }: { session: SessionDto }) {
     } catch (e) {
       // Inny telefon mógł już wylosować rundę albo zakończyć wieczór — pokaż stan z serwera.
       if (!(e instanceof ApiError && e.status === 409)) toast(errorMessage(e))
+      if (isCodeError(e)) await qc.invalidateQueries({ queryKey: keys.me })
       await qc.invalidateQueries({ queryKey: keys.live })
     } finally {
       setBusy(false)
@@ -314,33 +332,40 @@ export function Live({ session: s }: { session: SessionDto }) {
           target={s.target}
           scoreA={m.scoreA}
           onScore={(side, d) => score(m, side, d)}
+          readOnly={readOnly}
         />
       ))}
 
-      <div className="actions">
-        {isLast ? (
-          <button
-            className="btn primary block"
-            disabled={!allScored || busy}
-            onClick={() => finish()}
-          >
-            Zakończ wieczór i zapisz ✓
-          </button>
-        ) : (
-          <>
-            <button className="btn primary block" disabled={!allScored || busy} onClick={nextRound}>
-              {busy ? 'Chwila…' : 'Następna runda →'}
+      {!readOnly && (
+        <div className="actions">
+          {isLast ? (
+            <button
+              className="btn primary block"
+              disabled={!allScored || busy}
+              onClick={() => finish()}
+            >
+              Zakończ wieczór i zapisz ✓
             </button>
-            <button className="btn block" disabled={busy} onClick={onFinishClick}>
-              {emptyFinishArmed
-                ? 'Nic nie rozegrano — kliknij ponownie, żeby odrzucić wieczór'
-                : plan
-                  ? 'Zakończ wcześniej'
-                  : 'Zakończ wieczór i zapisz'}
-            </button>
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <button
+                className="btn primary block"
+                disabled={!allScored || busy}
+                onClick={nextRound}
+              >
+                {busy ? 'Chwila…' : 'Następna runda →'}
+              </button>
+              <button className="btn block" disabled={busy} onClick={onFinishClick}>
+                {emptyFinishArmed
+                  ? 'Nic nie rozegrano — kliknij ponownie, żeby odrzucić wieczór'
+                  : plan
+                    ? 'Zakończ wcześniej'
+                    : 'Zakończ wieczór i zapisz'}
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       <h2>Tabela wieczoru</h2>
       <StatsTable rows={sortRows(table([view]))} compact />
@@ -354,13 +379,17 @@ export function Live({ session: s }: { session: SessionDto }) {
         </>
       )}
 
-      <div style={{ marginTop: 14, textAlign: 'center' }}>
-        <button className="btn ghost small muted" disabled={busy} onClick={discard}>
-          {cancelArmed
-            ? 'Na pewno? Kliknij ponownie, żeby odrzucić wieczór'
-            : 'Odrzuć wieczór bez zapisu'}
-        </button>
-      </div>
+      {footer && <div style={{ marginTop: 18 }}>{footer}</div>}
+
+      {!readOnly && (
+        <div style={{ marginTop: 14, textAlign: 'center' }}>
+          <button className="btn ghost small muted" disabled={busy} onClick={discard}>
+            {cancelArmed
+              ? 'Na pewno? Kliknij ponownie, żeby odrzucić wieczór'
+              : 'Odrzuć wieczór bez zapisu'}
+          </button>
+        </div>
+      )}
 
       {unequal && (
         <FinishDialog

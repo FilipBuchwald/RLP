@@ -8,7 +8,7 @@ import {
   stepFor,
 } from '../../../shared/americano'
 import type { SessionMode } from '../../../shared/dto'
-import { api } from '../../api'
+import { api, isCodeError } from '../../api'
 import { errorMessage, useToast } from '../../context'
 import { fmtDuration, plural } from '../../format'
 import { keys, usePlayers } from '../../queries'
@@ -63,6 +63,7 @@ export function Setup() {
       setNewGuest(false)
     } catch (err) {
       toast(errorMessage(err))
+      if (isCodeError(err)) await qc.invalidateQueries({ queryKey: keys.me })
     } finally {
       setBusy(false)
     }
@@ -85,6 +86,7 @@ export function Setup() {
       window.scrollTo({ top: 0 })
     } catch (err) {
       toast(errorMessage(err))
+      if (isCodeError(err)) await qc.invalidateQueries({ queryKey: keys.me })
       await qc.invalidateQueries({ queryKey: keys.live })
     } finally {
       setBusy(false)

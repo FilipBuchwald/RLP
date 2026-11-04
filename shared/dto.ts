@@ -9,6 +9,16 @@ export interface PlayerDto {
   isGuest: boolean
 }
 
+/** GET /api/me */
+export interface MeDto {
+  /** access = Cloudflare Access, code = wspólny kod grupy, dev = lokalnie, none = tylko odczyt */
+  mode: 'access' | 'dev' | 'code' | 'none'
+  user: string | null
+  canWrite: boolean
+  /** Stan podanego kodu (tryb 'code'). */
+  code: 'none' | 'ok' | 'wrong' | 'locked'
+}
+
 export type SessionMode = 'plan' | 'open'
 export type SessionStatus = 'live' | 'done'
 

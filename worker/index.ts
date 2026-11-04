@@ -1,6 +1,6 @@
 import { errorResponse } from './http'
 import { Router } from './router'
-import { health } from './routes/health'
+import { health, me } from './routes/health'
 import * as matches from './routes/matches'
 import * as players from './routes/players'
 import * as sessions from './routes/sessions'
@@ -8,6 +8,7 @@ import * as stats from './routes/stats'
 
 const router = new Router()
   .on('GET', '/api/health', health)
+  .on('GET', '/api/me', me)
   .on('GET', '/api/players', players.list)
   .on('POST', '/api/players', players.create)
   .on('PATCH', '/api/players/:id', players.update)

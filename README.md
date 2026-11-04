@@ -34,16 +34,18 @@ Workera (`worker/index.ts`) i lokalną D1 w prawdziwym runtime Workers.
 Endpointy: [PLAN.md, sekcja 5](PLAN.md). Kształty JSON-a: `shared/dto.ts`.
 Wieczór i każda runda zapisują się atomowo (`DB.batch`).
 
-Kto pisze do bazy: `worker/auth.ts`.
+Kto pisze do bazy: `worker/auth.ts` (po kolei):
 
-- **Produkcja:** Worker weryfikuje podpisany token Cloudflare Access (`Cf-Access-Jwt-Assertion`:
-  podpis, wystawca, AUD, ważność) i bierze z niego e-mail. Samemu nagłówkowi z e-mailem nie ufa.
-- **Lokalnie:** e-mail z `DEV_USER_EMAIL` w `.dev.vars` — działa wyłącznie na `localhost`.
-- **Brak konfiguracji Access:** odczyt działa, wszystkie zapisy → 401.
+- **Cloudflare Access** (gdy ustawione `ACCESS_*`): podpisany token JWT — podpis, wystawca, AUD, ważność.
+- **Lokalnie:** `DEV_USER_EMAIL` z `.dev.vars` — działa wyłącznie na `localhost`.
+- **Kod grupy** (sekret `EDIT_CODE`): odczyt dla wszystkich, zapisy z nagłówkiem `X-Edit-Code`.
+- **Nic nie ustawione:** tylko odczyt, zapisy → 401.
+
+Samemu nagłówkowi z e-mailem API nigdy nie ufa. `GET /api/me` mówi, czy dany telefon może zapisywać.
 
 ## Wdrożenie
 
-Adres: https://rlp.fbuchwald-dev.workers.dev (za Cloudflare Access).
+Adres: https://rlp.fbuchwald-dev.workers.dev
 
 Worker `rlp` w Cloudflare jest podłączony do repo na GitHubie (Workers Builds):
 każdy push na `main` → `npm run build` → `npx wrangler deploy`.
@@ -60,30 +62,29 @@ shared/     czysta logika (losowanie, ranking) — bez zależności od Cloudflar
 migrations/ SQL dla D1
 ```
 
-## Dostęp: Cloudflare Access (logowanie kodem z e-maila)
+## Dostęp
 
-Darmowe do 50 osób. Kto jest na liście e-maili, loguje się jednorazowym kodem (One-time PIN);
-reszta świata nie zobaczy nawet strony.
+**Teraz: wspólny kod grupy.** Oglądać (Ranking, Historia, wieczór na żywo) może każdy, kto ma link.
+Żeby zacząć wieczór, wpisywać wyniki albo dodawać graczy, telefon raz podaje kod grupy
+(zakładka Gra → „Kod grupy”) i go zapamiętuje. Spacje i wielkość liter nie mają znaczenia.
 
-1. **Zero Trust** (dash.cloudflare.com → Zero Trust). Przy pierwszym wejściu wybierz nazwę zespołu
-   (np. `padel` → domena `padel.cloudflareaccess.com`) i plan **Free**.
-2. **Settings → Authentication → Login methods:** upewnij się, że jest **One-time PIN**.
-3. **Workers & Pages → rlp → Settings → Domains & Routes:** przy `workers.dev` kliknij
-   **Enable Cloudflare Access** (to samo przy _Preview URLs_, jeśli są włączone).
-   Cloudflare utworzy aplikację Access i pokaże jej **AUD** (Application Audience Tag).
-4. **Zero Trust → Access → Applications →** nowa aplikacja `rlp` **→ Policies:** polityka _Allow_,
-   _Include → Emails:_ e-maile osób, które mają prowadzić wieczory (właściciel + 3–4 stałych bywalców).
-   W **Settings** aplikacji ustaw _Session duration_ np. na 1 miesiąc, żeby nie logować się co tydzień.
-5. W `wrangler.toml` (już ustawione dla `patient-fire-adf3`) wpisz:
-   ```toml
-   [vars]
-   ACCESS_TEAM_DOMAIN = "padel.cloudflareaccess.com"
-   ACCESS_AUD = "<AUD z kroku 3>"
-   ```
-   i wypchnij na `main`. Od tej chwili API przyjmuje zapisy tylko z ważnym tokenem Access.
+- Ustawienie / zmiana kodu (min. 6 znaków, lepiej 8+):
+  `printf '%s' 'NASZKOD' | npx wrangler secret put EDIT_CODE` — kod nie trafia do repo.
+  Po zmianie kodu telefony ze starym kodem same go zapomną i poproszą o nowy.
+- Ochrona przed zgadywaniem: po 10 błędnych próbach z jednego IP — 15 minut przerwy
+  (tabela `code_attempts`, migracja `0002`).
+- „Zapomnij kod na tym telefonie” — link na dole zakładki Gra.
 
-Nowa osoba z dostępem = nowy e-mail w polityce z kroku 4 (w aplikacji nic się nie zmienia).
-Nowy **gracz** (bez dostępu) = „Dodaj nowego gracza” w aplikacji.
+**Później, z własną domeną: Cloudflare Access** (logowanie kodem z maila, lista osób).
+Kod Workera to obsługuje — gdy w `wrangler.toml` są `ACCESS_TEAM_DOMAIN` i `ACCESS_AUD`, Access ma
+pierwszeństwo przed kodem grupy. Na `workers.dev` Access chroni cały adres (także oglądanie),
+dlatego na razie go nie używamy. Skrót konfiguracji (Zero Trust, nowy układ panelu):
+
+1. Zespół (Zero Trust → Settings → Team domain), plan Free.
+2. **Integrations → Identity providers → One-time PIN.**
+3. **Access controls → Policies → Add a policy:** Allow, Include → **Emails** (nie „Email domain”!).
+4. Aplikacja Access dla domeny / ścieżki, _Login methods_: tylko One-time PIN, Instant Auth.
+5. W `wrangler.toml`: `ACCESS_TEAM_DOMAIN` i `ACCESS_AUD` (AUD aplikacji), push.
 
 ## Telefon: dodaj do ekranu głównego
 

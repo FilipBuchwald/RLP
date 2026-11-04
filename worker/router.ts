@@ -1,5 +1,5 @@
 // Minimalny router dla /api/* oparty o URLPattern (wbudowany w runtime Workers).
-import { authenticate } from './auth'
+import { authenticate, type AuthMode, type CodeStatus } from './auth'
 import { HttpError, errorResponse } from './http'
 
 export type Ctx = {
@@ -9,6 +9,9 @@ export type Ctx = {
   params: Record<string, string | undefined>
   /** E-mail ze zweryfikowanego tokenu Cloudflare Access (lokalnie: DEV_USER_EMAIL), null gdy brak. */
   user: string | null
+  /** Jak działa dostęp (do GET /api/me). */
+  mode: AuthMode
+  code: CodeStatus
 }
 export type Handler = (ctx: Ctx) => Response | Promise<Response>
 
@@ -28,7 +31,7 @@ export class Router {
     const url = new URL(request.url)
     const auth = await authenticate(request, env)
     if (!auth.ok) return errorResponse(auth.status, auth.message)
-    const user = auth.email
+    const { user, mode, code } = auth
     let pathMatched = false
 
     for (const r of this.routes) {
@@ -37,9 +40,16 @@ export class Router {
       pathMatched = true
       if (r.method !== request.method) continue
       // Zapisy tylko dla zalogowanych.
-      if (!READ_METHODS.has(request.method) && !user) return errorResponse(401, 'Brak logowania')
+      if (!READ_METHODS.has(request.method) && !user) {
+        if (code === 'locked')
+          return errorResponse(429, 'Za dużo błędnych prób — spróbuj za kwadrans')
+        if (code === 'wrong') return errorResponse(401, 'Zły kod', { code: 'wrong_code' })
+        if (mode === 'code')
+          return errorResponse(401, 'Wpisz kod, żeby prowadzić wieczór', { code: 'need_code' })
+        return errorResponse(401, 'Zapisy są wyłączone')
+      }
       try {
-        return await r.handler({ request, env, url, params: m.pathname.groups, user })
+        return await r.handler({ request, env, url, params: m.pathname.groups, user, mode, code })
       } catch (e) {
         if (e instanceof HttpError) return errorResponse(e.status, e.message, e.extra)
         throw e

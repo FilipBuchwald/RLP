@@ -6,3 +6,6 @@ DEV_USER_EMAIL=ty@example.com
 # Lokalnie bez Cloudflare Access (nadpisuje [vars] z wrangler.toml).
 ACCESS_TEAM_DOMAIN=
 ACCESS_AUD=
+
+# Tryb kodu grupy lokalnie: wyczyść DEV_USER_EMAIL i ustaw np.
+# EDIT_CODE=testkod123

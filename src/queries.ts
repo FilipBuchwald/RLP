@@ -7,6 +7,7 @@ import { api } from './api'
 export const LIVE_POLL_MS = 5000
 
 export const keys = {
+  me: ['me'] as const,
   players: ['players'] as const,
   live: ['live'] as const,
   ranking: (season: number) => ['ranking', season] as const,
@@ -17,6 +18,10 @@ export const keys = {
 /** Bieżący wieczór — odpytywany co 5 s, żeby wszystkie telefony widziały to samo. */
 export const useLive = () =>
   useQuery({ queryKey: keys.live, queryFn: api.live, refetchInterval: LIVE_POLL_MS })
+
+/** Czy ten telefon może zapisywać (Access / kod grupy / lokalnie). */
+export const useMe = () => useQuery({ queryKey: keys.me, queryFn: api.me, staleTime: 60_000 })
+export const useCanWrite = () => useMe().data?.canWrite ?? false
 
 export const usePlayers = () => useQuery({ queryKey: keys.players, queryFn: api.players })
 

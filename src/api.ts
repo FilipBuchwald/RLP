@@ -1,6 +1,7 @@
 // Klient /api. Frontend rozmawia wyłącznie z Workerem — nigdy bezpośrednio z bazą.
 import type {
   CreatePlayerBody,
+  MeDto,
   CreateSessionBody,
   PlayerDto,
   PlayerStatsDto,
@@ -23,12 +24,31 @@ export class ApiError extends Error {
 
 const SESSION_EXPIRED = 'Logowanie wygasło — odśwież stronę'
 
+// Wspólny kod grupy (tryb bez Cloudflare Access) — zapamiętany na tym telefonie.
+const CODE_KEY = 'padel-edit-code'
+export const editCode = {
+  get: () => {
+    try {
+      return localStorage.getItem(CODE_KEY)
+    } catch {
+      return null
+    }
+  },
+  set: (code: string) => localStorage.setItem(CODE_KEY, code),
+  clear: () => localStorage.removeItem(CODE_KEY),
+}
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   let res: Response
   try {
+    const headers: Record<string, string> = {}
+    if (body !== undefined) headers['Content-Type'] = 'application/json'
+    // Kod tylko przy zapisach i /me — odczyty (polling) go nie potrzebują i nie nabijają licznika prób.
+    const code = editCode.get()
+    if (code && (method !== 'GET' || path === '/me')) headers['X-Edit-Code'] = code
     res = await fetch(`/api${path}`, {
       method,
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      headers,
       body: body === undefined ? undefined : JSON.stringify(body),
       // Wygasła sesja Cloudflare Access = przekierowanie na stronę logowania. Nie podążamy za nim.
       redirect: 'manual',
@@ -44,6 +64,8 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   } catch {
     // np. strona logowania Cloudflare Access zamiast JSON-a
   }
+  if (res.status === 401 && (data as { code?: string } | null)?.code === 'wrong_code')
+    editCode.clear()
   if (!res.ok) {
     const d = (data ?? null) as Record<string, unknown> | null
     const msg = typeof d?.error === 'string' ? d.error : `Błąd ${res.status}`
@@ -52,10 +74,21 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return data as T
 }
 
+/** Serwer odrzucił zapis, bo brak kodu albo kod jest zły. */
+export const isCodeError = (e: unknown) =>
+  e instanceof ApiError &&
+  (e.status === 429 ||
+    (e.status === 401 && ['need_code', 'wrong_code'].includes(String(e.data?.code))))
+
 export const isUnequal = (e: unknown): e is ApiError & { data: UnequalDto } =>
   e instanceof ApiError && e.status === 409 && e.data?.code === 'unequal'
 
 export const api = {
+  me: async () => {
+    const me = await request<MeDto>('GET', '/me')
+    if (me.code === 'wrong') editCode.clear() // np. grupa zmieniła kod
+    return me
+  },
   players: () => request<PlayerDto[]>('GET', '/players'),
   createPlayer: (body: CreatePlayerBody) => request<PlayerDto>('POST', '/players', body),
   updatePlayer: (id: string, body: UpdatePlayerBody) =>

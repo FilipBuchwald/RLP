@@ -1,3 +1,4 @@
+import type { MeDto } from '../../shared/dto'
 import { json } from '../http'
 import type { Handler } from '../router'
 
@@ -14,3 +15,7 @@ export const health: Handler = async ({ env, user }) => {
 
   return json({ ok: true, db, user })
 }
+
+// GET /api/me — czy ten telefon może zapisywać i jak działa dostęp.
+export const me: Handler = ({ user, mode, code }) =>
+  json({ mode, user, canWrite: user != null, code } satisfies MeDto)

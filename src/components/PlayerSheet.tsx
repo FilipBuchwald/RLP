@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { api } from '../api'
 import { errorMessage, useToast } from '../context'
 import { SEASON } from '../format'
-import { useInvalidateAll, usePlayerLookup, usePlayerStats } from '../queries'
+import { useCanWrite, useInvalidateAll, usePlayerLookup, usePlayerStats } from '../queries'
 import { Dot } from './Dot'
 import { CloseButton, Sheet } from './Sheet'
 
@@ -14,6 +14,7 @@ export function PlayerSheet({ id, onClose }: { id: string; onClose: () => void }
   const toast = useToast()
   const invalidateAll = useInvalidateAll()
   const [busy, setBusy] = useState(false)
+  const canWrite = useCanWrite()
   const isGuest = data?.player.isGuest ?? player(id).isGuest
 
   async function toggleGuest() {
@@ -113,7 +114,7 @@ export function PlayerSheet({ id, onClose }: { id: string; onClose: () => void }
         </>
       )}
 
-      {data && (
+      {data && canWrite && (
         <div style={{ marginTop: 14, textAlign: 'center' }}>
           <button className="btn ghost small muted" disabled={busy} onClick={toggleGuest}>
             {isGuest ? 'Zmień na stałego gracza (wyniki wejdą do rankingu)' : 'Oznacz jako gościa'}

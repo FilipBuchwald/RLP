@@ -25,7 +25,7 @@ Język interfejsu: **polski**. Grupa docelowa: kilkanaście osób, 1–2 korty, 
 | Hosting | Cloudflare Workers ze statycznymi plikami (Worker `rlp`, deploy z GitHuba, gałąź `main`) |
 | Backend | Ten sam Worker obsługuje `/api/*` (`worker/`, router na URLPattern) |
 | Baza | Cloudflare D1 (SQLite), migracje przez `wrangler d1 migrations` |
-| Dostęp | Cloudflare Access, logowanie kodem e-mail (One-time PIN), darmowe do 50 użytkowników |
+| Dostęp | Teraz: wspólny kod grupy do zapisów (oglądać może każdy). Z własną domeną: Cloudflare Access (One-time PIN) |
 | Testy | Vitest (logika losowania i liczenia rankingu) |
 
 Bez Supabase i bez zewnętrznego CMS. Klucze do bazy nigdy nie trafiają do przeglądarki — frontend rozmawia tylko z `/api/*`.
