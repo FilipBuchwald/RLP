@@ -18,7 +18,7 @@ export default defineConfig([
     languageOptions: { globals: globals.browser },
   },
   {
-    files: ['functions/**/*.ts'],
+    files: ['worker/**/*.ts'],
     languageOptions: { globals: globals.serviceworker },
   },
   prettier,

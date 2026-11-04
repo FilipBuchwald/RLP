@@ -1,4 +1,4 @@
-// Klient /api. Frontend rozmawia wyłącznie z Pages Functions — nigdy bezpośrednio z bazą.
+// Klient /api. Frontend rozmawia wyłącznie z Workerem — nigdy bezpośrednio z bazą.
 
 export class ApiError extends Error {
   status: number

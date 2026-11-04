@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, type Health } from '../api'
 
-/** Tymczasowa karta z Etapu 1: pokazuje, czy działa API (Pages Functions) i D1. */
+/** Tymczasowa karta z Etapu 1: pokazuje, czy działa API (Worker) i D1. */
 export function EnvStatus() {
   const [health, setHealth] = useState<Health | null>(null)
   const [error, setError] = useState<string | null>(null)

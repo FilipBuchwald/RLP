@@ -22,8 +22,8 @@ Język interfejsu: **polski**. Grupa docelowa: kilkanaście osób, 1–2 korty, 
 | Warstwa | Technologia |
 | --- | --- |
 | Frontend | React + Vite + TypeScript, PWA (manifest, ikona, „Dodaj do ekranu głównego”) |
-| Hosting | Cloudflare Pages (deploy z GitHuba, gałąź `main`) |
-| Backend | Cloudflare Pages Functions (`/functions/api/*`) |
+| Hosting | Cloudflare Workers ze statycznymi plikami (Worker `rlp`, deploy z GitHuba, gałąź `main`) |
+| Backend | Ten sam Worker obsługuje `/api/*` (`worker/`, router na URLPattern) |
 | Baza | Cloudflare D1 (SQLite), migracje przez `wrangler d1 migrations` |
 | Dostęp | Cloudflare Access, logowanie kodem e-mail (One-time PIN), darmowe do 50 użytkowników |
 | Testy | Vitest (logika losowania i liczenia rankingu) |
@@ -35,8 +35,8 @@ Architektura:
 
 ```
 Telefon (PWA) --HTTPS--> Cloudflare Access (PIN e-mail, lista dozwolonych)
-                              |--> Pages (statyczny frontend React)
-                              |--> Pages Functions (/api/*) --> D1
+                              |--> Worker: statyczny frontend React (assets)
+                              |--> Worker: /api/* --> D1
 ```
 
 ---
@@ -150,7 +150,7 @@ Zasada: w danym momencie może być maksymalnie jeden wieczór ze `status = 'liv
 
 ---
 
-## 5. API (Pages Functions)
+## 5. API (Worker, `/api/*`)
 
 | Metoda | Ścieżka | Opis |
 | --- | --- | --- |
@@ -181,7 +181,7 @@ padel-liga/
     pages/             # Ranking, Game, History
     components/        # PlayerSheet, MatchCard, Podium, ...
     api.ts             # klient /api
-  functions/api/       # Pages Functions
+  worker/              # Worker: router + endpointy /api/*
   shared/              # czysta logika: americano.ts, stats.ts (+ testy)
   migrations/          # SQL dla D1
   public/              # manifest.webmanifest, ikony
@@ -204,9 +204,9 @@ Pracuj etapami; po każdym etapie zatrzymaj się, pokaż wynik i poczekaj na akc
 
 ### Etap 1. Projekt i środowisko
 - [ ] Repo `padel-liga`, React + Vite + TypeScript, ESLint/Prettier
-- [ ] `wrangler.toml` z bazą D1, skrypty `dev` (`wrangler pages dev`) i `migrate`
+- [ ] `wrangler.toml` z bazą D1, skrypty `dev` (Vite + `@cloudflare/vite-plugin`) i `migrate`
 - [ ] Pusta strona z zakładkami
-- **Gotowe, gdy:** lokalnie działa frontend + Functions + D1, a deploy na `*.pages.dev` się udaje
+- **Gotowe, gdy:** lokalnie działa frontend + Worker + D1, a deploy na `*.workers.dev` się udaje
 
 ### Etap 2. Logika i baza
 - [ ] `shared/americano.ts`: `makeRound`, `stepFor`, opcje planu rund; `shared/stats.ts`: tabela, przycinanie, profil
@@ -247,6 +247,6 @@ Pracuj etapami; po każdym etapie zatrzymaj się, pokaż wynik i poczekaj na akc
 | --- | --- |
 | Ranking i historia publiczne czy za logowaniem? | Cała strona za Access; łatwo zmienić na ochronę tylko zapisów |
 | Ranking sezonu: suma czy średnia? | Suma (wieczory są wyrównane), przełącznik na średnią |
-| Domena | Na start `*.pages.dev` |
+| Domena | Na start `*.workers.dev` |
 | Goście w rankingu sezonu | Osobna sekcja pod tabelą |
 | Kto ma dostęp do prowadzenia wieczoru | Właściciel + 3–4 stałych bywalców |

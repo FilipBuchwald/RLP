@@ -1,3 +1,3 @@
 # Skopiuj do .dev.vars (plik jest w .gitignore).
-# Lokalnie nie ma Cloudflare Access, więc API bierze e-mail użytkownika stąd.
+# Lokalnie nie ma Cloudflare Access, więc Worker bierze e-mail użytkownika stąd.
 DEV_USER_EMAIL=ty@example.com
