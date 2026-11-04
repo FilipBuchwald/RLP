@@ -15,5 +15,11 @@ database_name = "padel-liga"
 database_id = "9ac72ac0-df85-417a-8d35-24b722da271a"
 migrations_dir = "migrations"
 
+# Cloudflare Access (instrukcja w README). Wartości nie są tajne — to identyfikatory.
+# Dopóki są puste, API pozwala tylko na odczyt (zapisy → 401).
+[vars]
+ACCESS_TEAM_DOMAIN = "patient-fire-adf3.cloudflareaccess.com"
+ACCESS_AUD = "a511697e0b123a66aaad3fac5fcf0530b2faedebf8bf6e1ab4f71aa267e4cdff"
+
 [observability]
 enabled = true

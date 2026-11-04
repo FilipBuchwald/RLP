@@ -1,4 +1,5 @@
 // Minimalny router dla /api/* oparty o URLPattern (wbudowany w runtime Workers).
+import { authenticate } from './auth'
 import { HttpError, errorResponse } from './http'
 
 export type Ctx = {
@@ -6,7 +7,7 @@ export type Ctx = {
   env: Env
   url: URL
   params: Record<string, string | undefined>
-  /** E-mail z Cloudflare Access (lokalnie: DEV_USER_EMAIL), null gdy brak. */
+  /** E-mail ze zweryfikowanego tokenu Cloudflare Access (lokalnie: DEV_USER_EMAIL), null gdy brak. */
   user: string | null
 }
 export type Handler = (ctx: Ctx) => Response | Promise<Response>
@@ -25,8 +26,9 @@ export class Router {
 
   async handle(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
-    const user =
-      request.headers.get('Cf-Access-Authenticated-User-Email') ?? env.DEV_USER_EMAIL ?? null
+    const auth = await authenticate(request, env)
+    if (!auth.ok) return errorResponse(auth.status, auth.message)
+    const user = auth.email
     let pathMatched = false
 
     for (const r of this.routes) {
@@ -34,7 +36,7 @@ export class Router {
       if (!m) continue
       pathMatched = true
       if (r.method !== request.method) continue
-      // Zapisy tylko dla zalogowanych (nagłówek ustawia Cloudflare Access).
+      // Zapisy tylko dla zalogowanych.
       if (!READ_METHODS.has(request.method) && !user) return errorResponse(401, 'Brak logowania')
       try {
         return await r.handler({ request, env, url, params: m.pathname.groups, user })

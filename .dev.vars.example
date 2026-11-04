@@ -1,3 +1,8 @@
 # Skopiuj do .dev.vars (plik jest w .gitignore).
-# Lokalnie nie ma Cloudflare Access, więc Worker bierze e-mail użytkownika stąd.
+# Lokalnie nie ma Cloudflare Access, więc Worker bierze e-mail użytkownika stąd
+# (tylko gdy strona jest otwarta na localhost).
 DEV_USER_EMAIL=ty@example.com
+
+# Lokalnie bez Cloudflare Access (nadpisuje [vars] z wrangler.toml).
+ACCESS_TEAM_DOMAIN=
+ACCESS_AUD=

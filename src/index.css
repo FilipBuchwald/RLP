@@ -43,7 +43,8 @@ button {
 header {
   max-width: 720px;
   margin: 0 auto;
-  padding: 18px 18px 4px;
+  /* safe-area: w trybie PWA na iOS treść jest pod paskiem statusu */
+  padding: calc(18px + env(safe-area-inset-top)) 18px 4px;
   display: flex;
   align-items: center;
   justify-content: space-between;

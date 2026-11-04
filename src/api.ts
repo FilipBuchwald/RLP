@@ -21,12 +21,22 @@ export class ApiError extends Error {
   }
 }
 
+const SESSION_EXPIRED = 'Logowanie wygasło — odśwież stronę'
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const res = await fetch(`/api${path}`, {
-    method,
-    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  })
+  let res: Response
+  try {
+    res = await fetch(`/api${path}`, {
+      method,
+      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      // Wygasła sesja Cloudflare Access = przekierowanie na stronę logowania. Nie podążamy za nim.
+      redirect: 'manual',
+    })
+  } catch {
+    throw new ApiError(0, 'Brak połączenia z serwerem', null)
+  }
+  if (res.type === 'opaqueredirect') throw new ApiError(401, SESSION_EXPIRED, null)
   const text = await res.text()
   let data: unknown = null
   try {
