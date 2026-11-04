@@ -1,0 +1,218 @@
+/* Styl wg prototype-reference.html */
+:root {
+  --bg: #0b1120;
+  --card: #141c2e;
+  --card2: #1b2540;
+  --line: #26324d;
+  --tx: #eaf0fa;
+  --mu: #8b97b0;
+  --ac: #c8f53c;
+  --ac-d: #9cc21f;
+  --ac2: #4f8cff;
+  --red: #ff7a7a;
+  --gold: #f5c542;
+  --silver: #c9d1de;
+  --bronze: #d99059;
+}
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--tx);
+  font-family: Barlow, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.35;
+  padding-bottom: 92px;
+  min-height: 100vh;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+/* header */
+header {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 18px 18px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ball {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--ac);
+  position: relative;
+  box-shadow: 0 0 18px rgba(200, 245, 60, 0.35);
+}
+.ball::before,
+.ball::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 2px solid #0b1120;
+  border-radius: 50%;
+  clip-path: inset(0 55% 0 0);
+}
+.ball::after {
+  clip-path: inset(0 0 0 55%);
+}
+.brand {
+  font-family: 'Barlow Condensed';
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.brand b {
+  color: var(--ac);
+}
+.season {
+  font-size: 12px;
+  color: var(--mu);
+  margin-top: 2px;
+}
+.pill {
+  font-size: 11px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 4px 10px;
+  color: var(--mu);
+  white-space: nowrap;
+}
+
+/* layout */
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 4px 14px;
+}
+h2 {
+  font-family: 'Barlow Condensed';
+  font-weight: 600;
+  font-size: 17px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 22px 4px 10px;
+  color: var(--mu);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+}
+.muted {
+  color: var(--mu);
+}
+.small {
+  font-size: 13px;
+}
+.num {
+  font-family: 'Barlow Condensed';
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.kv:first-child {
+  border-top: 0;
+}
+.ok {
+  color: var(--ac);
+}
+.err {
+  color: var(--red);
+}
+.empty {
+  text-align: center;
+  padding: 26px 10px;
+  color: var(--mu);
+}
+.note {
+  margin: 26px 4px 0;
+  font-size: 12px;
+  color: var(--mu);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* dolne zakładki */
+.tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(11, 17, 32, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  z-index: 5;
+}
+.tabs a {
+  flex: 1;
+  max-width: 160px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--mu);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 0;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.tabs a svg {
+  width: 22px;
+  height: 22px;
+}
+.tabs a.on {
+  color: var(--ac);
+}
+.tabs a .live {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  display: inline-block;
+  margin-left: 4px;
+  vertical-align: middle;
+  animation: pulse 1.4s infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+  }
+}

@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Padel Liga — prototyp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b1120;--card:#141c2e;--card2:#1b2540;--line:#26324d;--tx:#eaf0fa;--mu:#8b97b0;--ac:#c8f53c;--ac-d:#9cc21f;--ac2:#4f8cff;--red:#ff7a7a;--gold:#f5c542;--silver:#c9d1de;--bronze:#d99059}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--tx);font-family:Barlow,system-ui,sans-serif;font-size:15px;line-height:1.35;padding-bottom:92px;min-height:100vh}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+header{max-width:720px;margin:0 auto;padding:18px 18px 4px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.logo{display:flex;align-items:center;gap:10px}
+.ball{width:30px;height:30px;border-radius:50%;background:var(--ac);position:relative;box-shadow:0 0 18px rgba(200,245,60,.35)}
+.ball:before,.ball:after{content:"";position:absolute;inset:3px;border:2px solid #0b1120;border-radius:50%;clip-path:inset(0 55% 0 0)}
+.ball:after{clip-path:inset(0 0 0 55%)}
+.brand{font-family:'Barlow Condensed';font-weight:700;font-size:24px;letter-spacing:.6px;text-transform:uppercase;line-height:1}
+.brand b{color:var(--ac)}
+.season{font-size:12px;color:var(--mu);margin-top:2px}
+.pill{font-size:11px;border:1px solid var(--line);border-radius:99px;padding:4px 10px;color:var(--mu);white-space:nowrap}
+main{max-width:720px;margin:0 auto;padding:4px 14px}
+h2{font-family:'Barlow Condensed';font-weight:600;font-size:17px;text-transform:uppercase;letter-spacing:.8px;margin:22px 4px 10px;color:var(--mu);display:flex;justify-content:space-between;align-items:center}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.muted{color:var(--mu)}
+.small{font-size:13px}
+.num{font-family:'Barlow Condensed';font-weight:600;font-variant-numeric:tabular-nums}
+
+/* segmented */
+.seg{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{padding:5px 11px;border-radius:7px;font-size:12px;font-weight:600;color:var(--mu);text-transform:none;letter-spacing:0;font-family:Barlow}
+.seg button.on{background:var(--card2);color:var(--tx)}
+
+/* podium */
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:8px;align-items:end;margin-top:6px}
+.pod{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 8px 12px;text-align:center;cursor:pointer}
+.pod.p1{padding-top:22px;border-color:rgba(200,245,60,.45);background:linear-gradient(180deg,rgba(200,245,60,.10),var(--card) 70%)}
+.pod .place{font-family:'Barlow Condensed';font-weight:700;font-size:13px;letter-spacing:1px}
+.p1 .place{color:var(--gold)}.p2 .place{color:var(--silver)}.p3 .place{color:var(--bronze)}
+.avatar{width:44px;height:44px;border-radius:50%;margin:8px auto 6px;display:grid;place-items:center;font-family:'Barlow Condensed';font-weight:700;font-size:18px;color:#0b1120}
+.p1 .avatar{width:54px;height:54px;font-size:22px}
+.pod .nm{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pod .val{font-family:'Barlow Condensed';font-weight:700;font-size:26px;color:var(--ac);line-height:1.1;margin-top:2px}
+.pod .lbl{font-size:11px;color:var(--mu)}
+
+/* table */
+.tbl{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.tr{display:grid;grid-template-columns:30px 1fr 46px 46px 34px 44px;align-items:center;padding:11px 12px;border-top:1px solid var(--line);gap:4px;cursor:pointer}
+.tr:first-child{border-top:0}
+.tr.th{cursor:default;font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;padding:9px 12px;background:rgba(255,255,255,.02)}
+.tr .c{text-align:right}
+.tr .pos{font-family:'Barlow Condensed';font-weight:700;color:var(--mu)}
+.tr .who{display:flex;align-items:center;gap:9px;min-width:0}
+.tr .who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.dot{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:700;color:#0b1120}
+.tr .hl{color:var(--ac);font-weight:700}
+.tr:not(.th):active{background:var(--card2)}
+
+/* stats strip */
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.stat .v{font-family:'Barlow Condensed';font-weight:700;font-size:26px;line-height:1}
+.stat .k{font-size:12px;color:var(--mu);margin-top:4px}
+
+/* setup */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:9px 14px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-weight:600;display:flex;align-items:center;gap:7px}
+.chip.on{background:var(--ac);color:#0b1120;border-color:var(--ac)}
+.chip .ck{width:16px;height:16px;border-radius:50%;border:2px solid currentColor;display:grid;place-items:center;font-size:10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.field{flex:1;min-width:140px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 12px;color:var(--tx);font:inherit;outline:none}
+.field:focus{border-color:var(--ac2)}
+.btn{padding:12px 16px;border-radius:12px;font-weight:700;background:var(--card2);border:1px solid var(--line)}
+.btn.primary{background:var(--ac);color:#0b1120;border-color:var(--ac)}
+.btn.primary:disabled{opacity:.35;cursor:not-allowed}
+.btn.ghost{background:none}
+.btn.danger{color:var(--red);border-color:rgba(255,122,122,.35);background:none}
+.btn.block{width:100%;font-size:16px;padding:15px}
+.opt{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.opt:first-child{border-top:0;padding-top:2px}
+.hint{font-size:13px;color:var(--mu);margin-top:10px}
+
+/* live */
+.livehead{display:flex;justify-content:space-between;align-items:flex-end;margin:16px 4px 10px}
+.livehead .r{font-family:'Barlow Condensed';font-weight:700;font-size:34px;line-height:1}
+.livehead .r em{font-style:normal;color:var(--ac)}
+.match{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 12px 6px;margin-bottom:10px}
+.match.done{border-color:rgba(200,245,60,.35)}
+.court{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--mu);display:flex;justify-content:space-between;margin:0 2px 6px}
+.side{display:flex;align-items:center;justify-content:space-between;padding:8px 2px;gap:8px}
+.side+.side{border-top:1px dashed var(--line)}
+.names{font-weight:600;font-size:16px;min-width:0}
+.names div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctrl{display:flex;align-items:center;gap:6px;flex:none}
+.ctrl button{width:40px;height:40px;border-radius:12px;background:var(--card2);border:1px solid var(--line);font-size:22px;font-weight:600;line-height:1}
+.ctrl button:active{background:var(--line)}
+.ctrl .sc{width:48px;text-align:center;font-family:'Barlow Condensed';font-weight:700;font-size:32px}
+.side.win .sc{color:var(--ac)}
+.side.win .names{color:var(--tx)}
+.sitting{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:rgba(79,140,255,.08);border:1px solid rgba(79,140,255,.25);font-size:14px;margin-bottom:12px}
+.actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:6px}
+.prev{font-size:14px}
+.prev .pr{display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--line);gap:8px}
+.prev .pr:first-child{border-top:0}
+.prev .pr .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prev .pr .t.r{text-align:right}
+.prev .pr .s{font-family:'Barlow Condensed';font-weight:700;width:62px;text-align:center;flex:none}
+.rlabel{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin:12px 0 2px}
+.rlabel:first-child{margin-top:0}
+
+/* history */
+details.ses{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:10px;overflow:hidden}
+details.ses summary{list-style:none;padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:10px}
+details.ses summary::-webkit-details-marker{display:none}
+.sd{font-weight:700;font-size:16px}
+.winner{font-size:13px;color:var(--mu);margin-top:2px}
+.winner b{color:var(--ac)}
+details.ses .body{padding:0 14px 14px}
+.chev{transition:transform .2s;color:var(--mu)}
+details[open] .chev{transform:rotate(90deg)}
+
+/* tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(11,17,32,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;justify-content:center;gap:4px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));z-index:5}
+.tabs a{flex:1;max-width:160px;text-align:center;text-decoration:none;color:var(--mu);font-size:12px;font-weight:600;padding:6px 0;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tabs a svg{width:22px;height:22px}
+.tabs a.on{color:var(--ac)}
+.tabs a .live{width:7px;height:7px;border-radius:50%;background:var(--red);display:inline-block;margin-left:4px;vertical-align:middle;animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.3}}
+
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(3,6,14,.72);display:none;align-items:flex-end;justify-content:center;z-index:10}
+#modal.open{display:flex}
+.sheet{background:var(--bg);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;width:100%;max-width:720px;max-height:88vh;overflow:auto;padding:18px 16px calc(24px + env(safe-area-inset-bottom))}
+.sheet .top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.sheet .top .avatar{margin:0;width:52px;height:52px;font-size:22px}
+.sheet .top h3{font-size:22px}
+.sheet .x{margin-left:auto;width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--line);font-size:18px}
+.form{display:flex;gap:5px}
+.form span{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:12px;font-weight:700}
+.form .W{background:var(--ac);color:#0b1120}.form .P{background:rgba(255,122,122,.18);color:var(--red)}.form .R{background:var(--card2);color:var(--mu)}
+.kv{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)}
+.kv:first-child{border-top:0}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.mode.on{border-color:var(--ac);background:linear-gradient(180deg,rgba(200,245,60,.10),var(--card) 80%)}
+.mode .mt{font-weight:700;font-size:16px}
+.mode .md{font-size:12.5px;color:var(--mu);margin-top:5px;line-height:1.4}
+.ropts{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.ropt{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center}
+.ropt.on{background:var(--ac);color:#0b1120;border-color:var(--ac)}
+.ropt .rn{font-family:'Barlow Condensed';font-weight:700;font-size:28px;line-height:1}
+.ropt .rl{font-size:12px;font-weight:600}
+.ropt .rp{font-size:12px;margin-top:6px;font-weight:600}
+.ropt .rt{font-size:11px;opacity:.7}
+.ropt:not(.on) .rp{color:var(--ac)}
+.info{padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:14px;margin-bottom:10px}
+.info.ok{background:rgba(200,245,60,.08);border-color:rgba(200,245,60,.35)}
+.livehead .of{font-size:22px;color:var(--mu)}
+.prog{height:5px;border-radius:9px;background:var(--card2);margin:0 2px 10px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ac);border-radius:9px;transition:width .3s}
+s.cut{color:var(--mu);opacity:.6}
+.tag{display:inline-block;font-size:11.5px;margin-top:6px;padding:2px 8px;border-radius:99px;background:rgba(255,159,90,.12);color:#ffb27a}
+.tag.ok{background:rgba(200,245,60,.1);color:var(--ac)}
+.note{margin:26px 4px 0;font-size:12px;color:var(--mu);text-align:center;line-height:1.5}
+.empty{text-align:center;padding:26px 10px;color:var(--mu)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="ball"></div>
+    <div><div class="brand">Padel <b>Liga</b></div><div class="season">Sezon 2026 · granie ze znajomymi</div></div>
+  </div>
+  <span class="pill">Prototyp</span>
+</header>
+<main id="app"></main>
+<nav class="tabs" id="tabs"></nav>
+<div id="modal"></div>
+
+<script>
+const LS='padel-poc-v3';
+const COLORS=['#c8f53c','#4f8cff','#ff9f5a','#ff7ab6','#5ee0c8','#b78cff','#f5c542','#7ad3ff','#ff7a7a','#9be36b','#e0a6ff','#ffd27a'];
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const key=(a,b)=>a<b?a+'|'+b:b+'|'+a;
+function rng(seed){let s=seed>>>0;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296}}
+
+/* ---------- Americano: generator rund ---------- */
+function pairings(arr){
+  if(!arr.length) return [[]];
+  const [f,...rest]=arr,out=[];
+  rest.forEach((x,i)=>{const rem=rest.filter((_,j)=>j!==i);for(const p of pairings(rem)) out.push([[f,x],...p]);});
+  return out;
+}
+function makeRound(players,rounds,courtsWanted,R=Math.random){
+  const played={},sat={},partner={},opp={};
+  players.forEach(p=>{played[p]=0;sat[p]=0});
+  const lastSat=new Set(rounds.length?rounds[rounds.length-1].sitting:[]);
+  rounds.forEach(r=>{
+    r.sitting.forEach(p=>sat[p]=(sat[p]||0)+1);
+    r.matches.forEach(m=>{
+      [...m.a,...m.b].forEach(p=>played[p]=(played[p]||0)+1);
+      [m.a,m.b].forEach(t=>{const k=key(t[0],t[1]);partner[k]=(partner[k]||0)+1});
+      m.a.forEach(x=>m.b.forEach(y=>{const k=key(x,y);opp[k]=(opp[k]||0)+1}));
+    });
+  });
+  const courts=Math.max(1,Math.min(courtsWanted,Math.floor(players.length/4)));
+  const sitN=players.length-courts*4;
+  // pauzuje ten, kto pauzował najmniej (i nie pauzował przed chwilą)
+  const order=players.map(p=>({p,a:sat[p]+(lastSat.has(p)?.6:0),b:-played[p],c:R()}))
+    .sort((x,y)=>x.a-y.a||x.b-y.b||x.c-y.c);
+  const sitting=order.slice(0,sitN).map(o=>o.p);
+  const playing=players.filter(p=>!sitting.includes(p));
+  let best=null,bestC=Infinity;
+  for(const pr of pairings(playing)){
+    const pc=pr.reduce((s,[x,y])=>s+((partner[key(x,y)]||0)**2)*100,0);
+    if(pc>bestC) continue;
+    for(const mm of pairings(pr.map((_,i)=>i))){
+      let c=pc;
+      mm.forEach(([i,j])=>pr[i].forEach(x=>pr[j].forEach(y=>c+=((opp[key(x,y)]||0)**2)*10)));
+      c+=R();
+      if(c<bestC){bestC=c;best=mm.map(([i,j],ci)=>({court:ci+1,a:pr[i],b:pr[j],sa:null,sb:null}));}
+    }
+  }
+  return {n:rounds.length+1,sitting,matches:best};
+}
+
+/* ---------- dane demo ---------- */
+function seed(){
+  const names=['Filip','Kuba','Marta','Tomek','Ola','Bartek','Kasia','Michał'];
+  const skill=[.62,.55,.5,.58,.45,.52,.42,.6];
+  const players=names.map((n,i)=>({id:'p'+i,name:n,color:COLORS[i]}));
+  const nights=[
+    ['2026-10-06',[0,1,2,3,4,5],6,1],
+    ['2026-10-13',[0,1,2,3,5,6,7],7,1],
+    ['2026-10-20',[0,1,2,3,4,5,6,7],7,2],
+    ['2026-10-27',[0,2,3,4,7],5,1],
+    ['2026-11-03',[0,1,3,5,6,7],6,1],
+  ];
+  const R=rng(2026);
+  const sessions=nights.map(([date,idx,nr,courts],si)=>{
+    const ps=idx.map(i=>'p'+i),target=24,rounds=[];
+    for(let r=0;r<nr;r++){
+      const rd=makeRound(ps,rounds,courts,R);
+      rd.matches.forEach(m=>{
+        const sk=t=>t.reduce((s,p)=>s+skill[+p.slice(1)],0)/2;
+        let share=.5+(sk(m.a)-sk(m.b))*1.6+(R()-.5)*.34;
+        m.sa=Math.max(4,Math.min(target-4,Math.round(target*share)));m.sb=target-m.sa;
+      });
+      rounds.push(rd);
+    }
+    return {id:'s'+si,date,target,courts,players:ps,rounds,done:true};
+  });
+  return {players,sessions,live:null,setup:null,ui:{sort:'pts'}};
+}
+
+let S;
+try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
+if(!S||!S.players) S=seed();
+function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+
+const P=id=>S.players.find(p=>p.id===id)||{name:'?',color:'#888'};
+const nm=id=>esc(P(id).name);
+const ini=id=>esc(P(id).name.slice(0,1).toUpperCase());
+const fmtDate=d=>new Date(d+'T12:00:00').toLocaleDateString('pl-PL',{weekday:'short',day:'numeric',month:'short'});
+const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+
+/* ---------- statystyki ---------- */
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+const stepFor=(n,c)=>n/gcd(n,4*c);           // co ile rund wszyscy mają równo meczów
+const plural=(n,one,few,many)=>n===1?one:(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?few:many;
+function counts(s,rounds){
+  const c={};s.players.forEach(p=>c[p]=0);
+  (rounds||s.rounds).forEach(r=>r.matches.forEach(m=>{if(m.sa==null)return;[...m.a,...m.b].forEach(p=>c[p]=(c[p]||0)+1)}));
+  return c;
+}
+// mecze odcięte przy przycinaniu: każdemu liczymy tylko pierwsze `cap` meczów
+function excluded(s){
+  const ex=new Set();if(!s.cap) return ex;
+  const c={};
+  s.rounds.forEach((r,ri)=>r.matches.forEach((m,mi)=>{
+    if(m.sa==null) return;
+    [...m.a,...m.b].forEach(p=>{c[p]=(c[p]||0)+1;if(c[p]>s.cap) ex.add(ri+'-'+mi+'-'+p)});
+  }));
+  return ex;
+}
+function table(sessions){
+  const t={};
+  const get=id=>t[id]||(t[id]={id,pts:0,m:0,w:0,d:0,l:0,n:new Set()});
+  sessions.forEach(s=>{
+    const ex=excluded(s);
+    s.players.forEach(p=>get(p).n.add(s.id));
+    s.rounds.forEach((r,ri)=>r.matches.forEach((m,mi)=>{
+      if(m.sa==null) return;
+      [[m.a,m.sa,m.sb],[m.b,m.sb,m.sa]].forEach(([team,f,ag])=>team.forEach(p=>{
+        if(ex.has(ri+'-'+mi+'-'+p)) return;
+        const x=get(p);x.pts+=f;x.m++;f>ag?x.w++:f<ag?x.l++:x.d++;
+      }));
+    }));
+  });
+  return Object.values(t).map(x=>({...x,nights:x.n.size,avg:x.m?x.pts/x.m:0,wp:x.m?x.w/x.m:0}));
+}
+function sorted(rows,mode){
+  return rows.slice().sort(mode==='avg'?(a,b)=>b.avg-a.avg||b.pts-a.pts:(a,b)=>b.pts-a.pts||b.avg-a.avg);
+}
+
+/* ---------- widoki ---------- */
+function view(){return (location.hash||'#ranking').slice(1)}
+function render(){
+  const v=['ranking','gra','historia'].includes(view())?view():'ranking';
+  const app=document.getElementById('app');
+  app.innerHTML=v==='ranking'?vRanking():v==='gra'?vGame():vHistory();
+  renderTabs(v);
+}
+function renderTabs(v){
+  const ic={
+    ranking:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>',
+    gra:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16M3 12h18"/></svg>',
+    historia:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+  };
+  const lb={ranking:'Ranking',gra:'Gra',historia:'Historia'};
+  document.getElementById('tabs').innerHTML=Object.keys(lb).map(k=>
+    `<a href="#${k}" class="${k===v?'on':''}">${ic[k]}<span>${lb[k]}${k==='gra'&&S.live?'<i class="live"></i>':''}</span></a>`).join('');
+}
+
+function vRanking(){
+  const done=S.sessions.filter(s=>s.done);
+  const rows=sorted(table(done),S.ui.sort);
+  if(!rows.length) return `<div class="empty">Brak rozegranych wieczorów.</div>`;
+  const totalM=done.reduce((s,x)=>s+x.rounds.reduce((a,r)=>a+r.matches.length,0),0);
+  const val=r=>S.ui.sort==='avg'?r.avg.toFixed(1):r.pts;
+  const lbl=S.ui.sort==='avg'?'pkt / mecz':'punktów';
+  const pod=[rows[1],rows[0],rows[2]].map((r,i)=>r?`
+    <div class="pod p${[2,1,3][i]}" data-act="player" data-id="${r.id}">
+      <div class="place">${[2,1,3][i]}. MIEJSCE</div>
+      <div class="avatar" style="background:${P(r.id).color}">${ini(r.id)}</div>
+      <div class="nm">${nm(r.id)}</div>
+      <div class="val">${val(r)}</div><div class="lbl">${lbl}</div>
+    </div>`:'<div></div>').join('');
+  return `
+  <div class="strip" style="margin-top:12px">
+    <div class="stat"><div class="v">${done.length}</div><div class="k">wieczorów</div></div>
+    <div class="stat"><div class="v">${totalM}</div><div class="k">meczów</div></div>
+    <div class="stat"><div class="v">${rows.length}</div><div class="k">graczy</div></div>
+  </div>
+  <h2><span>Klasyfikacja</span>
+    <span class="seg"><button data-act="sort" data-v="pts" class="${S.ui.sort==='pts'?'on':''}">Suma</button><button data-act="sort" data-v="avg" class="${S.ui.sort==='avg'?'on':''}">Średnia</button></span>
+  </h2>
+  <div class="podium">${pod}</div>
+  <div class="tbl" style="margin-top:12px">
+    <div class="tr th"><div>#</div><div>Gracz</div><div class="c">Pkt</div><div class="c">Śr.</div><div class="c">M</div><div class="c">Wyg.</div></div>
+    ${rows.map((r,i)=>`
+      <div class="tr" data-act="player" data-id="${r.id}">
+        <div class="pos">${i+1}</div>
+        <div class="who"><div class="dot" style="background:${P(r.id).color}">${ini(r.id)}</div><span>${nm(r.id)}</span></div>
+        <div class="c num ${S.ui.sort==='pts'?'hl':''}">${r.pts}</div>
+        <div class="c num ${S.ui.sort==='avg'?'hl':''}">${r.avg.toFixed(1)}</div>
+        <div class="c num muted">${r.m}</div>
+        <div class="c num muted">${Math.round(r.wp*100)}%</div>
+      </div>`).join('')}
+  </div>
+  <p class="note">Americano: każdy gracz dostaje tyle punktów, ile zdobyła jego para w meczu.<br>Kliknij gracza, żeby zobaczyć jego statystyki.</p>`;
+}
+
+function vGame(){
+  if(!S.live) return vSetup();
+  const L=S.live,cur=L.rounds[L.rounds.length-1];
+  const allScored=cur.matches.every(m=>m.sa!=null);
+  const prev=L.rounds.slice(0,-1).reverse();
+  const rows=sorted(table([L]),'pts');
+  const side=(m,ri,mi,s)=>{
+    const t=s==='a'?m.a:m.b,sc=s==='a'?m.sa:m.sb,o=s==='a'?m.sb:m.sa;
+    return `<div class="side ${sc!=null&&sc>o?'win':''}">
+      <div class="names"><div>${nm(t[0])}</div><div>${nm(t[1])}</div></div>
+      <div class="ctrl">
+        <button data-act="sc" data-m="${mi}" data-s="${s}" data-d="-1" aria-label="minus">−</button>
+        <div class="sc">${sc==null?'–':sc}</div>
+        <button data-act="sc" data-m="${mi}" data-s="${s}" data-d="1" aria-label="plus">+</button>
+      </div></div>`;
+  };
+  const step=stepFor(L.players.length,L.courts);
+  const doneR=L.rounds.length-(allScored?0:1);
+  const cnt=counts(L),vals=Object.values(cnt),equalNow=doneR>0&&Math.min(...vals)===Math.max(...vals);
+  const isLast=L.plan&&cur.n>=L.plan;
+  let info;
+  if(L.plan){
+    const per=L.plan*4*L.courts/L.players.length;
+    info=`🎯 Plan: <b>${L.plan} rund</b> · każdy zagra <b>${per} ${plural(per,'mecz','mecze','meczów')}</b>${isLast?' · <b>ostatnia runda!</b>':` · zostało ${L.plan-cur.n+1}`}`;
+  }else{
+    const nextEq=Math.ceil(Math.max(doneR,1)/step)*step+(equalNow&&doneR%step===0?step:0);
+    info=equalNow?`✅ <b>Teraz wszyscy mają równo meczów</b> (${vals[0]}) — możecie kończyć. Kolejny raz równo po rundzie ${nextEq}.`
+      :`⚖️ Równo meczów będzie po <b>rundzie ${nextEq}</b>${doneR<nextEq?` · jeszcze ${nextEq-doneR} ${plural(nextEq-doneR,'runda','rundy','rund')}`:''}`;
+  }
+  const progress=L.plan?`<div class="prog"><i style="width:${Math.round(doneR/L.plan*100)}%"></i></div>`:'';
+  return `
+  <div class="livehead">
+    <div><div class="muted small">${esc(fmtDate(L.date))} · do ${L.target} pkt · ${L.players.length} graczy · ${L.plan?'plan rund':'bez limitu'}</div>
+    <div class="r">Runda <em>${cur.n}</em>${L.plan?`<span class="of"> / ${L.plan}</span>`:''}</div></div>
+    <span class="pill">na żywo</span>
+  </div>
+  ${progress}
+  <div class="info ${equalNow&&!L.plan?'ok':''}">${info}</div>
+  ${cur.sitting.length?`<div class="sitting">☕ <span>Pauzuje: <b>${cur.sitting.map(nm).join(', ')}</b></span></div>`:''}
+  ${cur.matches.map((m,mi)=>`
+    <div class="match ${m.sa!=null?'done':''}">
+      <div class="court"><span>Kort ${m.court}</span><span>${m.sa!=null?'suma '+(m.sa+m.sb)+'/'+L.target:'wpisz wynik'}</span></div>
+      ${side(m,0,mi,'a')}${side(m,0,mi,'b')}
+    </div>`).join('')}
+  <div class="actions">
+    ${isLast
+      ?`<button class="btn primary block" data-act="finish" ${allScored?'':'disabled'}>Zakończ wieczór i zapisz ✓</button>`
+      :`<button class="btn primary block" data-act="next" ${allScored?'':'disabled'}>Następna runda →</button>
+        <button class="btn block" data-act="finish">${L.plan?'Zakończ wcześniej':'Zakończ wieczór i zapisz'}</button>`}
+  </div>
+  <h2>Tabela wieczoru</h2>
+  <div class="tbl">
+    <div class="tr th" style="grid-template-columns:30px 1fr 46px 46px 34px"><div>#</div><div>Gracz</div><div class="c">Pkt</div><div class="c">Śr.</div><div class="c">M</div></div>
+    ${rows.map((r,i)=>`<div class="tr" style="grid-template-columns:30px 1fr 46px 46px 34px;cursor:default">
+      <div class="pos">${i+1}</div><div class="who"><div class="dot" style="background:${P(r.id).color}">${ini(r.id)}</div><span>${nm(r.id)}</span></div>
+      <div class="c num hl">${r.pts}</div><div class="c num">${r.avg.toFixed(1)}</div><div class="c num muted">${r.m}</div></div>`).join('')}
+  </div>
+  ${prev.length?`<h2>Poprzednie rundy</h2><div class="card prev">${roundsList(L,prev)}</div>`:''}
+  <div style="margin-top:14px;text-align:center"><button class="btn ghost small muted" data-act="cancel">${S.cancelArm?'Na pewno? Kliknij ponownie, żeby odrzucić wieczór':'Odrzuć wieczór bez zapisu'}</button></div>`;
+}
+function roundsList(s,rounds){
+  const ex=excluded(s);
+  return rounds.map(r=>{
+    const ri=s.rounds.indexOf(r);
+    const n=(p,mi)=>ex.has(ri+'-'+mi+'-'+p)?`<s class="cut">${nm(p)}</s>`:nm(p);
+    return `<div class="rlabel">Runda ${r.n}${r.sitting.length?' · pauza: '+r.sitting.map(nm).join(', '):''}</div>`+
+    r.matches.map((m,mi)=>`<div class="pr"><div class="t">${n(m.a[0],mi)} / ${n(m.a[1],mi)}</div><div class="s">${m.sa??'–'} : ${m.sb??'–'}</div><div class="t r">${n(m.b[0],mi)} / ${n(m.b[1],mi)}</div></div>`).join('');
+  }).join('');
+}
+
+function vSetup(){
+  if(!S.setup) S.setup={sel:[],target:24,courts:1,mode:null,rounds:null};
+  const st=S.setup,n=st.sel.length;
+  const maxCourts=Math.max(1,Math.min(2,Math.floor(n/4)));
+  if(st.courts>maxCourts) st.courts=maxCourts;
+  const sit=n>=4?n-st.courts*4:0;
+  const step=n>=4?stepFor(n,st.courts):1;
+  const opts=[];
+  for(let k=1;opts.length<5&&k*step<=30;k++){const r=k*step,per=r*4*st.courts/n;if(per>=2)opts.push({r,per})}
+  if(st.rounds&&!opts.some(o=>o.r===st.rounds)) st.rounds=null;
+  const minPerRound=st.target<=16?9:st.target<=21?12:st.target<=24?13:17;
+  const dur=m=>{const h=Math.floor(m/60),mm=m%60;return h?`${h} h${mm?' '+mm+' min':''}`:mm+' min'};
+  const ready=n>=4&&st.mode&&(st.mode==='open'||st.rounds);
+  const modeBlock=n<4?'':`
+  <h2>Ile gramy?</h2>
+  <div class="modes">
+    <button class="mode ${st.mode==='plan'?'on':''}" data-act="mode" data-v="plan">
+      <div class="mt">🎯 Plan rund</div><div class="md">Ustalamy z góry liczbę rund — każdy zagra tyle samo meczów.</div></button>
+    <button class="mode ${st.mode==='open'?'on':''}" data-act="mode" data-v="open">
+      <div class="mt">♾️ Bez limitu</div><div class="md">Gramy, ile się da. Na końcu wyniki przycinamy do równej liczby meczów.</div></button>
+  </div>
+  ${st.mode==='plan'?`
+  <div class="card" style="margin-top:10px">
+    <div class="muted small" style="margin-bottom:10px">Przy ${n} ${plural(n,'osobie','osobach','osobach')} i ${st.courts} ${plural(st.courts,'korcie','kortach','kortach')} równo wychodzi co <b style="color:var(--tx)">${step} ${plural(step,'rundę','rundy','rund')}</b>. Wybierz:</div>
+    <div class="ropts">${opts.map(o=>`<button class="ropt ${st.rounds===o.r?'on':''}" data-act="rounds" data-v="${o.r}">
+      <div class="rn">${o.r}</div><div class="rl">${plural(o.r,'runda','rundy','rund')}</div>
+      <div class="rp">po ${o.per} ${plural(o.per,'mecz','mecze','meczów')}</div><div class="rt">≈ ${dur(o.r*minPerRound)}</div></button>`).join('')}</div>
+  </div>`:''}`;
+  return `
+  <h2>Nowy wieczór · Americano</h2>
+  <div class="card">
+    <div class="muted small" style="margin-bottom:10px">Kto dziś gra? <b style="color:var(--tx)">${n}</b> ${n===1?'osoba':n>=2&&n<=4?'osoby':'osób'}</div>
+    <div class="chips">
+      ${S.players.map(p=>`<button class="chip ${st.sel.includes(p.id)?'on':''}" data-act="toggle" data-id="${p.id}"><span class="ck">${st.sel.includes(p.id)?'✓':''}</span>${esc(p.name)}</button>`).join('')}
+    </div>
+    <form class="row" style="margin-top:12px" data-form="add">
+      <input class="field" id="newp" placeholder="Dodaj nowego gracza" maxlength="20" autocomplete="off">
+      <button class="btn" type="submit">Dodaj</button>
+    </form>
+  </div>
+  <h2>Ustawienia</h2>
+  <div class="card">
+    <div class="opt"><div><div style="font-weight:600">Mecz do</div><div class="muted small">łączna liczba punktów w meczu</div></div>
+      <span class="seg">${[16,21,24,32].map(v=>`<button data-act="target" data-v="${v}" class="${st.target===v?'on':''}">${v}</button>`).join('')}</span></div>
+    <div class="opt"><div><div style="font-weight:600">Korty</div><div class="muted small">${n>=8?'przy 8+ osobach można grać na 2':'2 korty od 8 osób'}</div></div>
+      <span class="seg">${[1,2].map(v=>`<button data-act="courts" data-v="${v}" class="${st.courts===v?'on':''}" ${v>maxCourts?'disabled style="opacity:.35"':''}>${v}</button>`).join('')}</span></div>
+  </div>
+  <p class="hint">${n<4?'Potrzeba minimum 4 osób.':`Każda runda: ${st.courts*4} gra${sit?`, ${sit} ${sit===1?'pauzuje':'pauzują'} (pauzy rozkładają się po równo)`:''}. Pary zmieniają się tak, żeby każdy zagrał z każdym.`}</p>
+  ${modeBlock}
+  <div style="margin-top:16px"><button class="btn primary block" data-act="start" ${ready?'':'disabled'}>${n<4?'Start — losuj 1. rundę':!st.mode?'Wybierz, ile gracie':st.mode==='plan'&&!st.rounds?'Wybierz liczbę rund':'Start — losuj 1. rundę'}</button></div>`;
+}
+
+function vHistory(){
+  const done=S.sessions.filter(s=>s.done).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  return `<h2>Historia wieczorów</h2>`+(done.length?done.map(s=>{
+    const top=sorted(table([s]),'pts')[0];
+    const nm_=s.rounds.reduce((a,r)=>a+r.matches.length,0);
+    return `<details class="ses"><summary>
+      <div><div class="sd">${esc(fmtDate(s.date))}</div>
+      <div class="winner">Wygrał(a) <b>${nm(top.id)}</b> · ${top.pts} pkt · ${s.players.length} graczy · ${nm_} ${plural(nm_,'mecz','mecze','meczów')}</div>
+      ${s.cap?`<div class="tag">✂️ przycięte do ${s.cap} ${plural(s.cap,'meczu','meczów','meczów')} na osobę</div>`:s.plan?`<div class="tag ok">🎯 plan ${s.plan} rund</div>`:''}</div>
+      <span class="chev">›</span></summary>
+      <div class="body prev">
+        <div class="rlabel">Wyniki wieczoru</div>
+        <div class="small" style="margin:4px 0 8px;line-height:1.7">${sorted(table([s]),'pts').map((r,i)=>`${i+1}. ${nm(r.id)} <b class="num">${r.pts}</b>`).join(' &nbsp;·&nbsp; ')}</div>
+        ${s.cap?`<div class="small muted" style="margin-bottom:6px"><s class="cut">Przekreślony</s> = mecz nieliczony dla tego gracza (przycięcie do równej liczby).</div>`:''}
+        ${roundsList(s,s.rounds)}
+      </div></details>`;
+  }).join(''):'<div class="empty">Brak wieczorów.</div>')+
+  `<p class="note">Prototyp: dane zapisują się tylko w tej przeglądarce.<br>W docelowej wersji trzymamy je w bazie (Supabase) i widzą je wszyscy.</p>
+   <div style="text-align:center;margin-top:10px"><button class="btn ghost small muted" data-act="reset">${S.resetArm?'Na pewno? Kliknij ponownie':'Przywróć dane demo'}</button></div>`;
+}
+
+/* ---------- profil gracza ---------- */
+function openPlayer(id){
+  const done=S.sessions.filter(s=>s.done).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const r=table(done).find(x=>x.id===id);
+  if(!r) return;
+  const hist=[],part={};
+  done.forEach(s=>{const ex=excluded(s);s.rounds.forEach((rd,ri)=>rd.matches.forEach((m,mi)=>{
+    const inA=m.a.includes(id),inB=m.b.includes(id);
+    if(!inA&&!inB) return;
+    if(ex.has(ri+'-'+mi+'-'+id)) return;
+    const t=inA?m.a:m.b,f=inA?m.sa:m.sb,ag=inA?m.sb:m.sa,mate=t.find(x=>x!==id);
+    const res=f>ag?'W':f<ag?'P':'R';
+    hist.push(res);
+    const q=part[mate]||(part[mate]={id:mate,m:0,pts:0,w:0});q.m++;q.pts+=f;if(res==='W')q.w++;
+  }))});
+  const mates=Object.values(part).filter(q=>q.m>=2).map(q=>({...q,avg:q.pts/q.m})).sort((a,b)=>b.avg-a.avg);
+  const bestM=mates[0],worstM=mates[mates.length-1];
+  const all=sorted(table(done),'pts'),pos=all.findIndex(x=>x.id===id)+1;
+  document.getElementById('modal').innerHTML=`<div class="sheet">
+    <div class="top"><div class="avatar" style="background:${P(id).color}">${ini(id)}</div>
+      <div><h3>${nm(id)}</h3><div class="muted small">${pos}. miejsce w sezonie</div></div>
+      <button class="x" data-act="close" aria-label="Zamknij">✕</button></div>
+    <div class="strip">
+      <div class="stat"><div class="v" style="color:var(--ac)">${r.pts}</div><div class="k">punktów</div></div>
+      <div class="stat"><div class="v">${r.avg.toFixed(1)}</div><div class="k">pkt / mecz</div></div>
+      <div class="stat"><div class="v">${Math.round(r.wp*100)}%</div><div class="k">wygranych</div></div>
+    </div>
+    <h2>Forma (ostatnie mecze)</h2>
+    <div class="form">${hist.slice(-8).map(x=>`<span class="${x}">${x}</span>`).join('')}</div>
+    <h2>Szczegóły</h2>
+    <div class="card">
+      <div class="kv"><span class="muted">Wieczory</span><b>${r.nights}</b></div>
+      <div class="kv"><span class="muted">Mecze</span><b>${r.m}</b></div>
+      <div class="kv"><span class="muted">Bilans W–R–P</span><b>${r.w}–${r.d}–${r.l}</b></div>
+      ${bestM?`<div class="kv"><span class="muted">Najlepszy partner</span><b>${nm(bestM.id)} · ${bestM.avg.toFixed(1)} pkt/mecz</b></div>`:''}
+      ${worstM&&worstM!==bestM?`<div class="kv"><span class="muted">Najsłabiej z</span><b>${nm(worstM.id)} · ${worstM.avg.toFixed(1)} pkt/mecz</b></div>`:''}
+    </div>
+  </div>`;
+  document.getElementById('modal').classList.add('open');
+}
+
+/* ---------- koniec wieczoru ---------- */
+function scoredRounds(L){return L.rounds.filter(r=>r.matches.every(m=>m.sa!=null))}
+function finalize(L,cap){
+  L.rounds=scoredRounds(L);
+  if(cap) L.cap=cap;
+  L.done=true;S.sessions.push(L);S.live=null;S.setup=null;save();
+  document.getElementById('modal').classList.remove('open');
+  location.hash='#historia';render();
+}
+function finishDialog(L){
+  const rounds=scoredRounds(L),c=counts(L,rounds);
+  const min=Math.min(...Object.values(c)),max=Math.max(...Object.values(c));
+  const step=stepFor(L.players.length,L.courts);
+  const nextEq=Math.ceil(rounds.length/step)*step,more=nextEq-rounds.length;
+  const rows=L.players.slice().sort((a,b)=>c[a]-c[b]).map(p=>`
+    <div class="kv"><span>${nm(p)}</span><b class="num" style="${c[p]>min?'color:var(--red)':''}">${c[p]} ${plural(c[p],'mecz','mecze','meczów')}${c[p]>min?` <span class="muted small">(−${c[p]-min})</span>`:''}</b></div>`).join('');
+  document.getElementById('modal').innerHTML=`<div class="sheet">
+    <div class="top"><div><h3>Nierówna liczba meczów</h3><div class="muted small">Rozegrane rundy: ${rounds.length}</div></div>
+      <button class="x" data-act="close" aria-label="Zamknij">✕</button></div>
+    <div class="card">${rows}</div>
+    <p class="hint" style="margin:12px 2px 14px">Przy przycięciu każdemu liczymy tylko jego <b style="color:var(--tx)">pierwsze ${min} ${plural(min,'mecz','mecze','meczów')}</b>. Nadmiarowe mecze zostają w historii, ale nie wchodzą do punktacji.</p>
+    <div class="actions">
+      <button class="btn primary block" data-act="trim" data-v="${min}">✂️ Przytnij do ${min} ${plural(min,'meczu','meczów','meczów')} i zapisz</button>
+      <button class="btn block" data-act="close">Gramy dalej — równo po rundzie ${nextEq} (jeszcze ${more})</button>
+    </div>
+  </div>`;
+  document.getElementById('modal').classList.add('open');
+}
+
+/* ---------- akcje ---------- */
+document.addEventListener('click',e=>{
+  const modal=document.getElementById('modal');
+  if(e.target===modal){modal.classList.remove('open');return}
+  const el=e.target.closest('[data-act]');if(!el) return;
+  const a=el.dataset.act;
+  if(a!=='reset') S.resetArm=false;
+  if(a!=='cancel') S.cancelArm=false;
+  if(a==='player'){openPlayer(el.dataset.id);return}
+  if(a==='close'){modal.classList.remove('open');return}
+  if(a==='sort') S.ui.sort=el.dataset.v;
+  if(a==='toggle'){const s=S.setup.sel,i=s.indexOf(el.dataset.id);i<0?s.push(el.dataset.id):s.splice(i,1);}
+  if(a==='target') S.setup.target=+el.dataset.v;
+  if(a==='courts'&&!el.disabled) S.setup.courts=+el.dataset.v;
+  if(a==='mode') S.setup.mode=el.dataset.v;
+  if(a==='rounds') S.setup.rounds=+el.dataset.v;
+  if(a==='trim'){finalize(S.live,+el.dataset.v);return}
+  if(a==='start'){
+    const st=S.setup;if(st.sel.length<4||!st.mode||(st.mode==='plan'&&!st.rounds)) return;
+    const ps=S.players.filter(p=>st.sel.includes(p.id)).map(p=>p.id);
+    S.live={id:uid(),date:todayISO(),target:st.target,courts:st.courts,players:ps,rounds:[],done:false,plan:st.mode==='plan'?st.rounds:null};
+    S.live.rounds.push(makeRound(ps,[],st.courts));
+  }
+  if(a==='sc'){
+    const L=S.live,m=L.rounds[L.rounds.length-1].matches[+el.dataset.m],d=+el.dataset.d,T=L.target;
+    let sa=m.sa==null?Math.floor(T/2):m.sa;
+    sa+=el.dataset.s==='a'?d:-d;
+    sa=Math.max(0,Math.min(T,sa));m.sa=sa;m.sb=T-sa;
+  }
+  if(a==='next'){const L=S.live;L.rounds.push(makeRound(L.players,L.rounds,L.courts));window.scrollTo({top:0,behavior:'smooth'});}
+  if(a==='finish'){
+    const L=S.live,rounds=scoredRounds(L);
+    if(!rounds.length){S.live=null;save();render();return}
+    const v=Object.values(counts(L,rounds));
+    if(Math.min(...v)===Math.max(...v)){finalize(L);return}
+    finishDialog(L);return;
+  }
+  if(a==='cancel'){if(!S.cancelArm){S.cancelArm=true}else{S.cancelArm=false;S.live=null}}
+  if(a==='reset'){if(!S.resetArm){S.resetArm=true}else{S=seed();}}
+  save();render();
+});
+document.addEventListener('submit',e=>{
+  if(e.target.dataset.form!=='add') return;
+  e.preventDefault();
+  const inp=document.getElementById('newp'),v=inp.value.trim();
+  if(!v) return;
+  const p={id:'p'+uid(),name:v,color:COLORS[S.players.length%COLORS.length]};
+  S.players.push(p);S.setup.sel.push(p.id);save();render();
+});
+window.addEventListener('hashchange',render);
+render();
+</script>
+</body>
+</html>

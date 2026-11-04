@@ -1,0 +1,9 @@
+name = "padel-liga"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "padel-liga"
+database_id = "9ac72ac0-df85-417a-8d35-24b722da271a"
+migrations_dir = "migrations"
